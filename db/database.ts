@@ -26,13 +26,20 @@ const globalForPool = globalThis as unknown as { margenPool?: Pool };
 // contraseña con @, :, / o # directamente invalida la URL.
 function construirConfig(connectionString:string):PoolConfig{
   const url=new URL(connectionString);
-  const passwordSuelta=process.env.DATABASE_PASSWORD;
+  const password=process.env.DATABASE_PASSWORD??decodeURIComponent(url.password);
+
+  // Sin esta comprobación, una contraseña ausente no falla aquí sino mucho después, dentro
+  // del driver, como "SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string",
+  // que no menciona ninguna variable de entorno y no dice dónde mirar. Pasó en el primer
+  // despliegue a Vercel: DATABASE_PASSWORD no estaba definida en Production.
+  if(!password)throw new Error("Falta la contraseña de la base de datos. Define DATABASE_PASSWORD en este entorno (en Vercel, con Production marcado), o inclúyela dentro de DATABASE_URL.");
+
   return {
     host:url.hostname,
     port:Number(url.port||5432),
     // El usuario sí viene percent-encoded dentro de la URL, así que se decodifica.
     user:decodeURIComponent(url.username),
-    password:passwordSuelta??decodeURIComponent(url.password),
+    password,
     database:url.pathname.slice(1)||"postgres",
     // Cifra el tránsito sin validar la cadena de certificados. Para verificación completa,
     // descarga el certificado CA desde Supabase → Settings → Database y usa
