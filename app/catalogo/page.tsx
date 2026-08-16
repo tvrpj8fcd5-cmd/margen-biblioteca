@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { coverSrc } from "../cover-src";
 import "./catalogo.css";
 
 type CatalogBook = {
@@ -47,7 +48,7 @@ export default function CatalogPage(){
     if(!response.ok)return;
     const stored=await response.json() as Array<{id:number;title:string;author:string;summary:string;status:string;rating:number;color:string;coverKey:string}>;
     if(!stored.length)return;
-    const mapped=stored.map(book=>({id:book.id,titulo:book.title,autor:book.author,portada_url:book.coverKey?`/api/covers/${encodeURIComponent(book.coverKey)}`:"",resumen:book.summary||"Aún no has añadido un resumen para este libro.",estado_leido:book.status==="Leído",calificacion:book.rating,progreso:book.status==="Leído"?100:book.status==="Leyendo"?65:0,tono:book.color}));
+    const mapped=stored.map(book=>({id:book.id,titulo:book.title,autor:book.author,portada_url:book.coverKey?coverSrc(book.coverKey):"",resumen:book.summary||"Aún no has añadido un resumen para este libro.",estado_leido:book.status==="Leído",calificacion:book.rating,progreso:book.status==="Leído"?100:book.status==="Leyendo"?65:0,tono:book.color}));
     setCatalogBooks(mapped);setSelected(mapped[0]);
   })()},[]);
 

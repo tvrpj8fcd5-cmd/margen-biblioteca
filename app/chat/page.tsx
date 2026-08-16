@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { coverSrc } from "../cover-src";
 import "./chat.css";
 
 type Role = "user" | "assistant";
@@ -14,7 +15,7 @@ const fallbackBook:LibraryBook={id:0,title:"Selecciona una obra",author:"Tu bibl
 
 function BookCover({book}:{book:LibraryBook}){
   return <div className={`chat-cover chat-tone-${book.color}`}>
-    {book.coverKey&&<img src={`/api/covers/${encodeURIComponent(book.coverKey)}`} alt={`Portada de ${book.title}`} onError={event=>{event.currentTarget.style.display="none"}}/>}
+    {book.coverKey&&<img src={coverSrc(book.coverKey)} alt={`Portada de ${book.title}`} onError={event=>{event.currentTarget.style.display="none"}}/>}
     <small>{book.author}</small><strong>{book.title}</strong>
   </div>;
 }

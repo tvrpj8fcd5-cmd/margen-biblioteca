@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { coverSrc } from "./cover-src";
 
 type Status = "Leído" | "Leyendo" | "Por leer";
 type Category = "Literatura" | "Filosofía" | "Ciencia ficción" | "Educativo";
@@ -15,7 +16,7 @@ const sortLabels:Record<SortOrder,string>={recent:"Último agregado",oldest:"Má
 
 function Cover({ book, large=false }: { book:Book; large?:boolean }) {
   const initials = book.title.split(/\s+/).filter(Boolean).slice(0,3).map(word=>word[0]).join("");
-  return <div className={`cover tone-${book.color} ${large ? "large" : ""}`}>{book.coverKey&&<img className="cover-image" src={`/api/covers/${encodeURIComponent(book.coverKey)}`} alt={`Portada de ${book.title}`} onError={event=>{event.currentTarget.style.display="none"}}/>}<small>{book.author}</small><strong>{book.title}</strong><span>{initials}</span></div>;
+  return <div className={`cover tone-${book.color} ${large ? "large" : ""}`}>{book.coverKey&&<img className="cover-image" src={coverSrc(book.coverKey)} alt={`Portada de ${book.title}`} onError={event=>{event.currentTarget.style.display="none"}}/>}<small>{book.author}</small><strong>{book.title}</strong><span>{initials}</span></div>;
 }
 
 export default function Home() {
@@ -51,7 +52,7 @@ export default function Home() {
 
   function chooseCover(file:File|null){
     setFormError("");setCoverFile(file);
-    setCoverPreview(file?URL.createObjectURL(file):(draft.coverKey?`/api/covers/${encodeURIComponent(draft.coverKey)}`:""));
+    setCoverPreview(file?URL.createObjectURL(file):(draft.coverKey?coverSrc(draft.coverKey):""));
   }
 
   const visible=useMemo(()=>{
@@ -159,7 +160,7 @@ export default function Home() {
       <div className="notes"><section><p className="section-label">EN POCAS PALABRAS</p><p className="summary">{selected.summary||"Aún no has escrito un resumen para este libro."}</p></section>
       <section><p className="section-label">IDEAS QUE ME LLEVO</p>{selected.ideas.length?<ol>{selected.ideas.map((idea,index)=><li key={index}><span>{String(index+1).padStart(2,"0")}</span><p>{idea}</p></li>)}</ol>:<p className="placeholder">Aquí aparecerán tus ideas principales.</p>}</section>
       {selected.quotes.length>0&&<section className="saved-quotes"><p className="section-label">CITAS PARA RECORDAR</p>{selected.quotes.map((quote,index)=><blockquote key={index}>“{quote}”<cite>— {selected.author}</cite></blockquote>)}</section>}</div>
-      <div className="detail-actions"><button className="danger" onClick={()=>deleteBook(selected)}>Eliminar</button><button className="primary" onClick={()=>{setDraft({...selected,ideas:selected.ideas.join("\n"),quotes:selected.quotes.length?selected.quotes:[""]});setEditingId(selected.id);setCoverFile(null);setCoverPreview(selected.coverKey?`/api/covers/${encodeURIComponent(selected.coverKey)}`:"");setFormError("");setSelected(null);setShowForm(true)}}>Editar notas</button></div>
+      <div className="detail-actions"><button className="danger" onClick={()=>deleteBook(selected)}>Eliminar</button><button className="primary" onClick={()=>{setDraft({...selected,ideas:selected.ideas.join("\n"),quotes:selected.quotes.length?selected.quotes:[""]});setEditingId(selected.id);setCoverFile(null);setCoverPreview(selected.coverKey?coverSrc(selected.coverKey):"");setFormError("");setSelected(null);setShowForm(true)}}>Editar notas</button></div>
     </aside></div>}
 
     {showForm&&<div className="overlay form-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><form className="book-form" onSubmit={addBook}>
