@@ -123,9 +123,13 @@ export default function ColeccionPage(){
 
           {abierto.pdfKey
             ? <div className="lector-lienzo lector-lienzo-pdf">
-                {/* Sin sandbox a propósito: restringirlo rompe el visor de PDF integrado
-                    de varios navegadores, y el documento sale de tu propio Storage. */}
-                <iframe src={abierto.pdfKey} title={`Documento de ${abierto.title}`}/>
+                {/* El src apunta a nuestra propia ruta, no a Storage: allí se comprueba
+                    que el documento pertenece a un libro real y se firma una lectura de
+                    30 minutos. Así la URL del visor es estable y la caducidad de la firma
+                    queda oculta, sin nada que refrescar desde aquí.
+                    Sin sandbox a propósito: restringirlo rompe el visor de PDF integrado
+                    de varios navegadores. */}
+                <iframe src={`/api/documentos/${abierto.pdfKey}`} title={`Documento de ${abierto.title}`}/>
               </div>
             : <div className="lector-lienzo lector-lienzo-vacio">
                 <p>Esta obra todavía no tiene un PDF asociado.</p>

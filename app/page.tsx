@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { coverSrc } from "./cover-src";
+import { subirDocumentoFirmado } from "./supabase-navegador";
 
 type Status = "Leído" | "Leyendo" | "Por leer";
 type Category = "Literatura" | "Filosofía" | "Ciencia ficción" | "Educativo";
@@ -104,11 +105,16 @@ export default function Home() {
       // y los tipos permitidos de una miniatura y de un libro entero no se parecen en nada.
       let pdfKey=draft.pdfKey;
       if(pdfFile){
-        const formData=new FormData();formData.append("documento",pdfFile);
-        const upload=await fetch("/api/documentos",{method:"POST",body:formData});
-        const uploadResult=await upload.json() as {key?:string;error?:string};
-        if(!upload.ok||!uploadResult.key)throw new Error(uploadResult.error||"No se pudo subir el documento");
-        pdfKey=uploadResult.key;
+        // El archivo NO atraviesa nuestra API. El servidor solo valida y firma un permiso
+        // de subida; el navegador envía el PDF directo a Storage. Así deja de aplicar el
+        // límite de ~4,5 MB que Vercel impone al cuerpo de las peticiones a funciones
+        // serverless, que un libro escaneado supera sin dificultad.
+        const firma=await fetch("/api/documentos/firma",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tipo:pdfFile.type,tamano:pdfFile.size})});
+        const permiso=await firma.json() as {ruta?:string;token?:string;error?:string};
+        if(!firma.ok||!permiso.ruta||!permiso.token)throw new Error(permiso.error||"No se pudo preparar la subida");
+        await subirDocumentoFirmado(permiso.ruta,permiso.token,pdfFile);
+        // Se guarda la ruta, no una URL: el bucket es privado y cada lectura se firma.
+        pdfKey=permiso.ruta;
       }
       const payload={...draft,coverKey,pdfKey,ideas:draft.ideas.split("\n").map(x=>x.trim()).filter(Boolean),quotes:draft.quotes.map(quote=>quote.trim()).filter(Boolean)};
       const response=await fetch(editingId?`/api/books/${editingId}`:"/api/books",{method:editingId?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
@@ -199,7 +205,7 @@ export default function Home() {
     {showForm&&<div className="overlay form-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><form className="book-form" onSubmit={addBook}>
       <div className="form-head"><div><p className="eyebrow">{editingId?"ACTUALIZAR ENTRADA":"NUEVA ENTRADA"}</p><h2>{editingId?"Editar lectura":"Añadir a la biblioteca"}</h2></div><button type="button" className="close" onClick={()=>setShowForm(false)} aria-label="Cerrar">×</button></div>
       <div className="form-grid"><label><span>Título</span><input required autoFocus value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})} placeholder="El nombre del libro"/></label><label><span>Autor</span><input required value={draft.author} onChange={e=>setDraft({...draft,author:e.target.value})} placeholder="Nombre del autor"/></label><label><span>Año</span><input value={draft.year} onChange={e=>setDraft({...draft,year:e.target.value})}/></label><label><span>Estado</span><select value={draft.status} onChange={e=>setDraft({...draft,status:e.target.value as Status})}><option>Por leer</option><option>Leyendo</option><option>Leído</option></select></label><label><span>Categoría</span><select value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as Category})}>{categories.map(category=><option key={category}>{category}</option>)}</select></label></div>
-      <fieldset className="cover-upload"><legend>Imagen de portada <small>Opcional</small></legend><div className="cover-upload-content">{coverPreview?<img src={coverPreview} alt="Vista previa de la portada"/>:<div className={`cover-upload-placeholder tone-${draft.color}`}><small>PORTADA AUTOMÁTICA</small><strong>{draft.title||"Tu libro"}</strong></div>}<div className="cover-upload-actions"><label htmlFor="cover-file">{coverFile||draft.coverKey?"Cambiar imagen":"Elegir imagen"}</label><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp" onChange={event=>chooseCover(event.target.files?.[0]??null)}/><p>JPG, PNG o WebP · Máximo 5 MB. Si no eliges una imagen, usaremos la portada automática.</p>{(coverFile||draft.coverKey)&&<button type="button" onClick={()=>{setCoverFile(null);setCoverPreview("");setPdfFile(null);setDraft({...draft,coverKey:""})}}>Usar portada automática</button>}</div></div></fieldset>
+      <fieldset className="cover-upload"><legend>Imagen de portada <small>Opcional</small></legend><div className="cover-upload-content">{coverPreview?<img src={coverPreview} alt="Vista previa de la portada"/>:<div className={`cover-upload-placeholder tone-${draft.color}`}><small>PORTADA AUTOMÁTICA</small><strong>{draft.title||"Tu libro"}</strong></div>}<div className="cover-upload-actions"><label htmlFor="cover-file">{coverFile||draft.coverKey?"Cambiar imagen":"Elegir imagen"}</label><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp" onChange={event=>chooseCover(event.target.files?.[0]??null)}/><p>JPG, PNG o WebP · Máximo 4 MB. Si no eliges una imagen, usaremos la portada automática.</p>{(coverFile||draft.coverKey)&&<button type="button" onClick={()=>{setCoverFile(null);setCoverPreview("");setPdfFile(null);setDraft({...draft,coverKey:""})}}>Usar portada automática</button>}</div></div></fieldset>
       {/* Control aparte del de la portada: son dos archivos distintos, con formatos,
           límites y destinos distintos. Compartir un solo botón obligaría a adivinar por
           la extensión qué quiso subir el usuario. */}

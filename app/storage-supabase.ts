@@ -7,10 +7,46 @@
 // La clave de service_role omite RLS: este módulo NUNCA debe importarse desde un
 // componente de cliente.
 
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
 const RUTA_PUBLICA = "/storage/v1/object/public/";
 
 export const BUCKET_PORTADAS = "book-covers";
 export const BUCKET_DOCUMENTOS = "book-documents";
+
+// Cliente con la clave secreta, solo para el servidor. Omite RLS por completo.
+let admin: SupabaseClient | null = null;
+function clienteAdmin(): SupabaseClient | null {
+  if (admin) return admin;
+  const { url, clave } = credenciales();
+  if (!url || !clave) return null;
+  admin = createClient(url, clave, { auth: { persistSession: false } });
+  return admin;
+}
+
+// Emite un permiso de subida de un solo uso para una ruta concreta.
+//
+// Con esto el navegador sube DIRECTO a Storage y el archivo deja de atravesar la función
+// serverless. Eso esquiva el límite de ~4,5 MB que Vercel impone al cuerpo de las
+// peticiones, que con un PDF se alcanza enseguida, y de paso quita esa carga del servidor.
+export async function firmarSubida(bucket: string, ruta: string): Promise<{ ok: true; ruta: string; token: string } | { ok: false; mensaje: string }> {
+  const cliente = clienteAdmin();
+  if (!cliente) return { ok: false, mensaje: "Storage no está configurado." };
+
+  const { data, error } = await cliente.storage.from(bucket).createSignedUploadUrl(ruta);
+  if (error || !data) return { ok: false, mensaje: error?.message ?? "no se pudo firmar la subida" };
+  return { ok: true, ruta: data.path, token: data.token };
+}
+
+// Firma una lectura temporal de un objeto de un bucket privado.
+export async function firmarLectura(bucket: string, ruta: string, segundos: number): Promise<{ ok: true; url: string } | { ok: false; mensaje: string }> {
+  const cliente = clienteAdmin();
+  if (!cliente) return { ok: false, mensaje: "Storage no está configurado." };
+
+  const { data, error } = await cliente.storage.from(bucket).createSignedUrl(ruta, segundos);
+  if (error || !data?.signedUrl) return { ok: false, mensaje: error?.message ?? "no se pudo firmar la lectura" };
+  return { ok: true, url: data.signedUrl };
+}
 
 function credenciales() {
   return {
@@ -142,5 +178,16 @@ async function borrarObjeto(bucket: string, urlPublica: string): Promise<void> {
   }
 }
 
+// Las portadas viven en un bucket público y se guardan como URL absoluta, así que hay
+// que extraer la ruta antes de borrar.
 export const borrarPortada = (url: string) => borrarObjeto(BUCKET_PORTADAS, url);
-export const borrarDocumento = (url: string) => borrarObjeto(BUCKET_DOCUMENTOS, url);
+
+// Los documentos viven en un bucket privado y en la base se guarda ya solo la ruta:
+// no hay URL estable que recortar, porque cada lectura se firma en el momento.
+export async function borrarDocumento(ruta: string): Promise<void> {
+  if (!ruta || ruta.startsWith("http")) return;
+  const cliente = clienteAdmin();
+  if (!cliente) return;
+  const { error } = await cliente.storage.from(BUCKET_DOCUMENTOS).remove([ruta]);
+  if (error) console.error("[storage] no se pudo borrar el documento", ruta, error.message);
+}
