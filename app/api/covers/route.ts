@@ -42,10 +42,23 @@ export async function POST(request:Request){
     if(!subida.ok){
       const detalle=await subida.text().catch(()=>"");
       console.error("[POST /api/covers] storage respondió",subida.status,detalle);
-      const pista=subida.status===400&&detalle.includes("Bucket not found")
-        ? ` El bucket "${BUCKET}" no existe en este proyecto de Supabase.`
-        : "";
-      return Response.json({error:`No se pudo subir la portada (HTTP ${subida.status}).${pista}`},{status:502});
+
+      // El cuerpo de error de Storage dice exactamente qué pasó y no contiene nada
+      // sensible, así que se devuelve al cliente. Antes solo se enviaba el código HTTP,
+      // lo que obligaba a ir a mirar los logs del servidor para cada fallo.
+      let mensaje="";
+      try{ mensaje=String((JSON.parse(detalle) as {message?:string}).message??""); }catch{ mensaje=detalle.slice(0,200); }
+
+      const pistas:Record<string,string>={
+        "Bucket not found":`El bucket "${BUCKET}" no existe en este proyecto de Supabase.`,
+        "row-level security":"La clave no tiene permisos de escritura. ¿Pusiste la publishable/anon en vez de la secret?",
+        "mime type":"El bucket no admite ese tipo de imagen. Solo acepta JPEG, PNG y WebP.",
+        "already exists":"Ya existe un objeto con ese nombre en el bucket.",
+        "exceeded the maximum":"La imagen supera el límite de 5 MB del bucket.",
+      };
+      const pista=Object.entries(pistas).find(([clave])=>mensaje.includes(clave)||detalle.includes(clave))?.[1]??"";
+
+      return Response.json({error:`No se pudo subir la portada (HTTP ${subida.status}): ${mensaje||"sin detalle"}. ${pista}`.trim()},{status:502});
     }
 
     // El bucket es público, así que esta URL se sirve sin token y vale directamente
