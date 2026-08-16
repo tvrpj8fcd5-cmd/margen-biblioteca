@@ -12,6 +12,12 @@ export async function POST(request:Request){
   if(!supabaseUrl)return Response.json({error:"Falta SUPABASE_URL. Configúrala en .env.local."},{status:503});
   if(!serviceKey)return Response.json({error:"Falta SUPABASE_SERVICE_ROLE_KEY. Cópiala desde Supabase → Project Settings → API keys."},{status:503});
 
+  // Una clave copiada de una interfaz que la muestra recortada trae dentro un «…» (U+2026).
+  // Las cabeceras HTTP solo admiten Latin-1, así que fetch falla con "Cannot convert argument
+  // to a ByteString...", un mensaje que no menciona ni la clave ni de dónde salió. Pasó en el
+  // primer despliegue a Vercel: la clave guardada allí estaba abreviada.
+  if(/[^\x20-\x7e]/.test(serviceKey))return Response.json({error:"SUPABASE_SERVICE_ROLE_KEY contiene caracteres que no son ASCII imprimible (por ejemplo «…»). Parece una copia abreviada y no la clave completa: cópiala con el botón de copiar del dashboard de Supabase."},{status:503});
+
   try{
     const form=await request.formData();
     const file=form.get("cover");
