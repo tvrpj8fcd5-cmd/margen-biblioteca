@@ -28,6 +28,7 @@ const mockBooks:CatalogBook[]=[
 const navItems=[
   {label:"Inicio",icon:"⌂",href:"/"},
   {label:"Mi Biblioteca",icon:"▦",active:true},
+  {label:"Mi colección",icon:"◫",href:"/coleccion"},
   {label:"Chat de la Obra",icon:"◌",href:"/chat"},
   {label:"Ajustes",icon:"⚙"},
 ];
