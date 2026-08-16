@@ -5,12 +5,15 @@ import { coverSrc } from "../cover-src";
 import "./chat.css";
 
 type Role = "user" | "assistant";
-type Message = { id:number; role:Role; content:string };
+// `synthetic` marca los mensajes que existen solo para la interfaz: la bienvenida y los
+// avisos de error. Se pintan como cualquier otro, pero NO viajan al modelo.
+type Message = { id:number; role:Role; content:string; synthetic?:boolean };
 type LibraryBook = { id:number; title:string; author:string; summary:string; status:"Leído"|"Leyendo"|"Por leer"; color:string; coverKey:string };
 
 const LM_STUDIO_URL="http://localhost:1234/v1/chat/completions";
 const SYSTEM_PROMPT="Eres un asistente literario experto. Estás ayudando al usuario a analizar el libro actual de su biblioteca.";
-const welcome:Message={id:1,role:"assistant",content:"Hola. Podemos conversar sobre los temas, personajes e ideas de esta obra. ¿Qué te gustaría analizar primero?"};
+const TIEMPO_MAXIMO_MS=120_000;
+const welcome:Message={id:1,role:"assistant",synthetic:true,content:"Hola. Podemos conversar sobre los temas, personajes e ideas de esta obra. ¿Qué te gustaría analizar primero?"};
 const fallbackBook:LibraryBook={id:0,title:"Selecciona una obra",author:"Tu biblioteca personal",summary:"Elige un libro para darle contexto a la conversación.",status:"Por leer",color:"ink",coverKey:""};
 
 function BookCover({book}:{book:LibraryBook}){
@@ -27,6 +30,8 @@ export default function ChatPage(){
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
   const messagesEnd=useRef<HTMLDivElement>(null);
+  const abortRef=useRef<AbortController|null>(null);
+  const motivoRef=useRef<"timeout"|"cancelado"|"cambio"|null>(null);
 
   useEffect(()=>{void (async()=>{
     try{
@@ -43,9 +48,23 @@ export default function ChatPage(){
 
   useEffect(()=>{messagesEnd.current?.scrollIntoView({behavior:"smooth"})},[messages,loading]);
 
+  // Si se abandona la página con una generación en curso, se corta la petición en lugar
+  // de dejarla colgando contra LM Studio.
+  useEffect(()=>()=>{abortRef.current?.abort()},[]);
+
+  function detener(motivo:"timeout"|"cancelado"|"cambio"){
+    if(!abortRef.current)return;
+    motivoRef.current=motivo;
+    abortRef.current.abort();
+    abortRef.current=null;
+  }
+
   function selectBook(id:number){
     const book=books.find(item=>item.id===id);
     if(!book)return;
+    // Cambiar de obra con una respuesta en vuelo dejaría caer esa respuesta —escrita para
+    // el libro anterior— dentro de la conversación nueva.
+    detener("cambio");
     setSelected(book);
     setMessages([{...welcome,id:Date.now(),content:`Ya tengo el contexto de “${book.title}”. ¿Qué aspecto de la obra quieres explorar?`}]);
   }
@@ -57,14 +76,26 @@ export default function ChatPage(){
     const userMessage:Message={id:Date.now(),role:"user",content};
     const conversation=[...messages,userMessage];
     setMessages(conversation);setInput("");setLoading(true);
+
+    const controller=new AbortController();
+    abortRef.current=controller;
+    motivoRef.current=null;
+    const temporizador=setTimeout(()=>detener("timeout"),TIEMPO_MAXIMO_MS);
+
     try{
       const response=await fetch(LM_STUDIO_URL,{
         method:"POST",
         headers:{"Content-Type":"application/json"},
+        signal:controller.signal,
         body:JSON.stringify({model:"bonsai",messages:[
           {role:"system",content:SYSTEM_PROMPT},
           {role:"system",content:`Libro actual: “${selected.title}”, de ${selected.author}. Resumen guardado por el usuario: ${selected.summary||"Sin resumen todavía."}`},
-          ...conversation.map(message=>({role:message.role,content:message.content})),
+          // Se excluyen los mensajes sintéticos. La plantilla de bonsai-27b rechazaba la
+          // conversación con "No user query found in messages" porque el saludo de
+          // bienvenida llegaba como un turno de `assistant` anterior a la primera pregunta
+          // del usuario. Filtrar aquí también evita que los avisos de error acaben
+          // contaminando el contexto de los mensajes siguientes.
+          ...conversation.filter(message=>!message.synthetic).map(message=>({role:message.role,content:message.content})),
         ],temperature:.7}),
       });
       if(!response.ok)throw new Error(`LM Studio respondió con el estado ${response.status}`);
@@ -72,9 +103,24 @@ export default function ChatPage(){
       const answer=data.choices?.[0]?.message?.content?.trim();
       if(!answer)throw new Error("El modelo no devolvió una respuesta");
       setMessages(current=>[...current,{id:Date.now()+1,role:"assistant",content:answer}]);
-    }catch{
-      setMessages(current=>[...current,{id:Date.now()+1,role:"assistant",content:"No pude conectar con Bonsai. Comprueba que LM Studio esté abierto, que el servidor local esté iniciado en el puerto 1234 y que CORS esté habilitado."}]);
-    }finally{setLoading(false)}
+    }catch(error){
+      const abortado=error instanceof DOMException&&error.name==="AbortError";
+      // Al cambiar de libro ya se reinició la conversación: escribir el aviso ahí solo
+      // ensuciaría un hilo que no tiene nada que ver.
+      if(abortado&&motivoRef.current==="cambio")return;
+
+      const detalle=error instanceof Error?error.message:"";
+      const texto=abortado
+        ? motivoRef.current==="timeout"
+          ? `La respuesta tardó más de ${TIEMPO_MAXIMO_MS/1000} segundos y se canceló. Según tu hardware, un modelo grande puede necesitar mucho más tiempo.`
+          : "Generación cancelada."
+        : `No pude conectar con Bonsai${detalle?`: ${detalle}`:""}. Comprueba que LM Studio esté abierto, que el servidor local esté iniciado en el puerto 1234 y que CORS esté habilitado.`;
+      setMessages(current=>[...current,{id:Date.now()+1,role:"assistant",content:texto,synthetic:true}]);
+    }finally{
+      clearTimeout(temporizador);
+      abortRef.current=null;
+      setLoading(false);
+    }
   }
 
   const progress=selected.status==="Leído"?100:selected.status==="Leyendo"?65:0;
@@ -103,7 +149,11 @@ export default function ChatPage(){
         {messages.map(message=><article key={message.id} className={`message ${message.role}`}><span className="message-author">{message.role==="assistant"?"Bonsai":"Tú"}</span><p>{message.content}</p></article>)}
         {loading&&<article className="message assistant loading-message" aria-label="Bonsai está escribiendo"><span className="message-author">Bonsai</span><p><i/><i/><i/></p></article>}<div ref={messagesEnd}/>
       </div>
-      <form className="chat-composer" onSubmit={sendMessage}><label><span className="sr-only">Escribe tu mensaje</span><textarea rows={1} value={input} onChange={event=>setInput(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();event.currentTarget.form?.requestSubmit()}}} placeholder="Pregunta sobre personajes, temas o ideas…" disabled={loading}/></label><button type="submit" disabled={loading||!input.trim()} aria-label="Enviar mensaje">↗</button></form>
+      <form className="chat-composer" onSubmit={sendMessage}><label><span className="sr-only">Escribe tu mensaje</span><textarea rows={1} value={input} onChange={event=>setInput(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();event.currentTarget.form?.requestSubmit()}}} placeholder="Pregunta sobre personajes, temas o ideas…" disabled={loading}/></label>
+        {loading
+          ? <button type="button" className="cancelar" onClick={()=>detener("cancelado")} title="Cancelar la generación" aria-label="Cancelar la generación">✕</button>
+          : <button type="submit" disabled={!input.trim()} aria-label="Enviar mensaje">↗</button>}
+      </form>
       <p className="chat-note">Las respuestas se generan localmente mediante LM Studio.</p>
     </section>
   </main>;
