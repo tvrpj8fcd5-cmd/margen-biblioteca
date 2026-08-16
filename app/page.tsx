@@ -82,7 +82,9 @@ export default function Home() {
       }
       const payload={...draft,coverKey,ideas:draft.ideas.split("\n").map(x=>x.trim()).filter(Boolean),quotes:draft.quotes.map(quote=>quote.trim()).filter(Boolean)};
       const response=await fetch(editingId?`/api/books/${editingId}`:"/api/books",{method:editingId?"PATCH":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-      if(!response.ok)throw new Error("No se pudo guardar el libro");
+      // La API devuelve el motivo real en `error`. Descartarlo y mostrar un mensaje
+      // genérico obligaba a ir a los logs del servidor para cualquier fallo al guardar.
+      if(!response.ok){const detalle=await response.json().catch(()=>({}))as{error?:string};throw new Error(detalle.error||"No se pudo guardar el libro");}
       const book=await response.json();setBooks(current=>editingId?current.map(item=>item.id===book.id?book:item):[book,...current]);setDraft(emptyDraft);setEditingId(null);setCoverFile(null);setCoverPreview("");setShowForm(false);setSelected(book);
     }catch(error){setFormError(error instanceof Error?error.message:"No se pudo guardar el libro");}
     finally{setSaving(false);}
