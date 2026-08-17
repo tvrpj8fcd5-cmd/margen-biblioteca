@@ -1,6 +1,6 @@
 import { Pool, type PoolConfig, type QueryResultRow } from "pg";
 
-export type BookRow = { id:number; title:string; author:string; year:string; status:string; summary:string; ideas:string; quote:string; quotes:string; rating:number; color:string; category:string; coverKey:string; pdfKey:string; createdAt:string };
+export type BookRow = { id:number; title:string; author:string; year:string; status:string; summary:string; ideas:string; quote:string; quotes:string; rating:number; color:string; category:string; coverKey:string; pdfKey:string; favorito:boolean; esSemanal:boolean; vecesLeido:number; createdAt:string };
 
 // Supabase es Postgres estándar, así que se usa `pg` en lugar del driver HTTP de Neon,
 // que solo habla con endpoints de Neon. El objeto que devuelve db() conserva la misma
@@ -83,7 +83,7 @@ export function db(){
   };
 }
 
-export const selectColumns='id, title, author, year, status, summary, ideas, quote, quotes, rating, color, category, cover_key AS "coverKey", pdf_key AS "pdfKey", created_at AS "createdAt"';
+export const selectColumns='id, title, author, year, status, summary, ideas, quote, quotes, rating, color, category, cover_key AS "coverKey", pdf_key AS "pdfKey", favorito, es_semanal AS "esSemanal", veces_leido AS "vecesLeido", created_at AS "createdAt"';
 
 export function present(row:BookRow){
   let ideas:string[]=[], quotes:string[]=[];

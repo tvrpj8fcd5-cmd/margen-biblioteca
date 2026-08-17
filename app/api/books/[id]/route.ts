@@ -13,7 +13,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     const quotes=Array.isArray(value.quotes)?value.quotes.map(String).map(quote=>quote.trim()).filter(Boolean):[];
     const nuevaPortada=String(value.coverKey??"");
     const nuevoDocumento=String(value.pdfKey??"");
-    const updatedRows=await database.query(`UPDATE books SET title=$1,author=$2,year=$3,status=$4,summary=$5,ideas=$6,quote=$7,quotes=$8,rating=$9,color=$10,category=$11,cover_key=$12,pdf_key=$13 WHERE id=$14 RETURNING ${selectColumns}`,[String(value.title),String(value.author),String(value.year),String(value.status),String(value.summary),JSON.stringify(Array.isArray(value.ideas)?value.ideas:[]),quotes[0]??"",JSON.stringify(quotes),Number(value.rating),String(value.color),String(value.category),nuevaPortada,nuevoDocumento,bookId]) as BookRow[];
+    const updatedRows=await database.query(`UPDATE books SET title=$1,author=$2,year=$3,status=$4,summary=$5,ideas=$6,quote=$7,quotes=$8,rating=$9,color=$10,category=$11,cover_key=$12,pdf_key=$13,favorito=$14 WHERE id=$15 RETURNING ${selectColumns}`,[String(value.title),String(value.author),String(value.year),String(value.status),String(value.summary),JSON.stringify(Array.isArray(value.ideas)?value.ideas:[]),quotes[0]??"",JSON.stringify(quotes),Number(value.rating),String(value.color),String(value.category),nuevaPortada,nuevoDocumento,Boolean(value.favorito),bookId]) as BookRow[];
 
     // Si el archivo cambió, el anterior ya no lo referencia nadie.
     if(current.coverKey&&current.coverKey!==nuevaPortada)await borrarPortada(current.coverKey);

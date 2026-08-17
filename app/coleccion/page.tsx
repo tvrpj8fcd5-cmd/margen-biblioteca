@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { coverSrc } from "../cover-src";
-import { useCapaModal } from "../usar-capa-modal";
+import { Lector } from "./lector";
 import "./coleccion.css";
 
 // `pdfKey` es la URL pública del documento en Supabase Storage, o cadena vacía si el
 // libro no tiene ninguno. Persiste en la base de datos, así que sobrevive a recargas,
 // despliegues y cambios de dispositivo.
-type Libro = { id:number; title:string; author:string; category:string; color:string; coverKey:string; pdfKey:string };
+type Libro = { id:number; title:string; author:string; category:string; color:string; coverKey:string; pdfKey:string; favorito:boolean };
 
 const MOCK:Libro[]=[
-  {id:1,title:"Cien años de soledad",author:"Gabriel García Márquez",category:"Literatura",color:"sage",coverKey:"",pdfKey:""},
-  {id:2,title:"Indigno de ser humano",author:"Osamu Dazai",category:"Literatura",color:"ink",coverKey:"",pdfKey:""},
-  {id:3,title:"Arquitectura de Modelos de Visión Artificial",author:"Tech Press",category:"Educativo",color:"blue",coverKey:"",pdfKey:""},
+  {id:1,title:"Cien años de soledad",author:"Gabriel García Márquez",category:"Literatura",color:"sage",coverKey:"",pdfKey:"",favorito:false},
+  {id:2,title:"Indigno de ser humano",author:"Osamu Dazai",category:"Literatura",color:"ink",coverKey:"",pdfKey:"",favorito:false},
+  {id:3,title:"Arquitectura de Modelos de Visión Artificial",author:"Tech Press",category:"Educativo",color:"blue",coverKey:"",pdfKey:"",favorito:false},
 ];
 
 export default function ColeccionPage(){
@@ -24,14 +24,20 @@ export default function ColeccionPage(){
   const [abierto,setAbierto]=useState<Libro|null>(null);
 
   const origenRef=useRef<HTMLButtonElement|null>(null);
-  const lectorRef=useRef<HTMLDivElement|null>(null);
 
   useEffect(()=>{void (async()=>{
     try{
       const respuesta=await fetch("/api/books");
       if(!respuesta.ok)return;
       const datos=await respuesta.json() as Libro[];
-      if(datos.length)setLibros(datos);
+      if(!datos.length)return;
+      setLibros(datos);
+      // Permite llegar desde la portada con la obra ya abierta: /coleccion?libro=30.
+      // Sin esto, el botón "Continuar leyendo" del banner dejaría al usuario en la
+      // cuadrícula teniendo que buscar a mano el libro que acababa de pedir.
+      const pedido=new URLSearchParams(window.location.search).get("libro");
+      const encontrado=pedido?datos.find(libro=>String(libro.id)===pedido):undefined;
+      if(encontrado)setAbierto(encontrado);
     }catch{/* Se conservan los datos mock si la API no responde. */}
   })()},[]);
 
@@ -41,7 +47,12 @@ export default function ColeccionPage(){
     origenRef.current?.focus();
   },[]);
 
-  useCapaModal(Boolean(abierto),cerrarLector,lectorRef);
+  // Actualiza la lista y el libro abierto a la vez: el visor lee de `abierto`, así que
+  // sin lo segundo la estrella no cambiaría hasta cerrar y volver a entrar.
+  const marcarFavorito=useCallback((id:number,favorito:boolean)=>{
+    setLibros(actuales=>actuales.map(item=>item.id===id?{...item,favorito}:item));
+    setAbierto(actual=>actual&&actual.id===id?{...actual,favorito}:actual);
+  },[]);
 
   function abrirLector(libro:Libro,boton:HTMLButtonElement){
     origenRef.current=boton;
@@ -89,6 +100,7 @@ export default function ColeccionPage(){
               {/* Señala de un vistazo cuáles tienen documento. Sin esto, todas las
                   tarjetas prometen lo mismo y la mayoría abre un aviso. */}
               {libro.pdfKey&&<span className="libro-insignia">PDF</span>}
+              {libro.favorito&&<span className="libro-favorito" aria-label="Favorito">★</span>}
             </span>
 
             <span className="libro-datos">
@@ -103,39 +115,8 @@ export default function ColeccionPage(){
 
     {/* La galería NO se desmonta: el lector es una capa por encima, no otra pantalla.
         Eso conserva el scroll, permite cerrar sin reconstruir nada y deja la puerta
-        abierta a una transición donde el panel se expanda desde la tarjeta pulsada. */}
-    {abierto&&
-      <div className="capa" role="dialog" aria-modal="true" aria-labelledby="lector-titulo" tabIndex={-1} ref={lectorRef}>
-        {/* El fondo es un botón real y no un div con onClick. Queda fuera del orden de
-            tabulación y oculto a los lectores de pantalla a propósito: es una comodidad
-            para el puntero, y con teclado ya están Escape y el botón de volver. */}
-        <button type="button" className="capa-fondo" tabIndex={-1} aria-hidden="true" onClick={cerrarLector}/>
-
-        <div className="panel panel-lector">
-          <header className="panel-cabecera">
-            <div>
-              <p className="panel-eyebrow">LECTOR</p>
-              <h2 id="lector-titulo">{abierto.title}</h2>
-              <p className="panel-subtitulo">{abierto.author}</p>
-            </div>
-            <button type="button" className="boton-cristal" onClick={cerrarLector}>Volver a la biblioteca</button>
-          </header>
-
-          {abierto.pdfKey
-            ? <div className="lector-lienzo lector-lienzo-pdf">
-                {/* El src apunta a nuestra propia ruta, no a Storage: allí se comprueba
-                    que el documento pertenece a un libro real y se firma una lectura de
-                    30 minutos. Así la URL del visor es estable y la caducidad de la firma
-                    queda oculta, sin nada que refrescar desde aquí.
-                    Sin sandbox a propósito: restringirlo rompe el visor de PDF integrado
-                    de varios navegadores. */}
-                <iframe src={`/api/documentos/${abierto.pdfKey}`} title={`Documento de ${abierto.title}`}/>
-              </div>
-            : <div className="lector-lienzo lector-lienzo-vacio">
-                <p>Esta obra todavía no tiene un PDF asociado.</p>
-                <Link className="boton-cristal" href="/">Añadir el documento desde la biblioteca</Link>
-              </div>}
-        </div>
-      </div>}
+        abierta a una transición donde el panel se expanda desde la tarjeta pulsada.
+        El visor gestiona su propia capa, foco y Escape; aquí solo se decide cuándo vive. */}
+    {abierto&&<Lector libro={abierto} onCerrar={cerrarLector} onFavorito={marcarFavorito}/>}
   </main>;
 }

@@ -89,6 +89,126 @@ body:after{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(229,234,
 .catalog-link{width:max-content;display:flex;align-items:center;gap:9px;margin-top:22px;padding:11px 16px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:#1d1a18;color:#fff;text-decoration:none;font-size:12px;font-weight:600;box-shadow:0 12px 26px rgba(31,25,22,.18),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .22s ease,box-shadow .22s ease}.catalog-link i{font-style:normal;font-size:15px}.catalog-link:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(31,25,22,.24),inset 0 1px 0 rgba(255,255,255,.2)}.catalog-link:focus-visible{outline:2px solid rgba(49,72,122,.55);outline-offset:3px}
 .cover:after{z-index:3;pointer-events:none}.cover-image{position:absolute;z-index:2;inset:0;width:100%;height:100%;object-fit:cover}
 .cover-upload{border:0;padding:0;margin:2px 0 20px}.cover-upload legend{margin-bottom:9px;color:#666;font-size:11px}.cover-upload legend small{margin-left:5px;color:#aaa}.cover-upload-content{display:grid;grid-template-columns:104px 1fr;gap:17px;align-items:center;padding:14px;border:1px solid rgba(255,255,255,.72);border-radius:16px;background:rgba(255,255,255,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}.cover-upload-content>img,.cover-upload-placeholder{width:82px;height:116px;justify-self:center;border-radius:5px;object-fit:cover;box-shadow:0 10px 22px rgba(32,28,25,.18)}.cover-upload-placeholder{display:flex;flex-direction:column;padding:9px 8px;color:#fff;overflow:hidden}.cover-upload-placeholder small{font-size:6px;letter-spacing:.08em}.cover-upload-placeholder strong{margin:auto 0;font:700 13px/.95 Georgia,serif}.tone-sand.cover-upload-placeholder{color:#28231e}.cover-upload-actions{min-width:0}.cover-upload-actions>label{display:inline-flex;align-items:center;min-height:40px;padding:9px 14px;border-radius:999px;background:#25211f;color:#fff;font-size:11px;font-weight:600;cursor:pointer}.cover-upload-actions input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.cover-upload-actions p{margin:10px 0 0;color:#8b8781;font-size:10px;line-height:1.45}.cover-upload-actions button{margin-top:8px;padding:0;border:0;border-bottom:1px solid #aaa;background:transparent;color:#696560;font-size:10px;cursor:pointer}
+/* ------------------------------------------------------------ Meta semanal --- */
+/* Banner entre el héroe y los filtros. Usa el mismo material de cristal que .topbar y
+   .book-card —mismo desenfoque, mismo borde, misma familia de sombras— para que se lea
+   como una pieza más del sistema y no como un módulo pegado encima. */
+.meta-semanal{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:28px;
+  /* Margen ARRIBA Y ABAJO. Sin el de abajo, .category-filter-panel —que no tiene margen
+     superior, solo padding— arrancaba pegado al borde del banner y, con su z-index:30,
+     se pintaba sobre la sombra de 50px que este proyecta hacia abajo. Se ve como una
+     superposición aunque las cajas no lleguen a solaparse.
+     34px es el mismo valor con el que cierra .intro, así que la separación entre héroe,
+     banner y filtros queda con el mismo ritmo. */
+  margin:34px 0;padding:20px 24px;
+  border:1px solid var(--glass-edge);border-radius:28px;
+  background:linear-gradient(145deg,rgba(255,255,255,.34),rgba(255,255,255,.13));
+  box-shadow:0 22px 50px rgba(58,39,29,.13),inset 0 1px 0 rgba(255,255,255,.8);
+  backdrop-filter:blur(28px) saturate(1.22);-webkit-backdrop-filter:blur(28px) saturate(1.22);
+}
+
+/* La portada se eleva sobre el cristal con dos sombras: una corta y densa que la pega a
+   la superficie, y otra larga y difusa que la separa del fondo. Una sola sombra se lee
+   plana. */
+.meta-portada{
+  position:relative;overflow:hidden;flex-shrink:0;
+  width:78px;height:112px;padding:10px;
+  display:flex;align-items:flex-end;
+  border-radius:10px;color:#fff;
+  box-shadow:0 4px 10px rgba(20,18,12,.22),0 18px 34px rgba(20,18,12,.24);
+}
+.meta-portada img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.meta-portada-titulo{position:relative;font-size:11px;font-weight:600;line-height:1.2;text-shadow:0 1px 8px rgba(0,0,0,.45);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+.meta-cuerpo{min-width:0}
+.meta-etiqueta{margin:0 0 8px;display:flex;align-items:center;gap:6px;color:rgba(27,23,21,.62);font-size:10px;font-weight:600;letter-spacing:.14em}
+.meta-cuerpo h2{margin:0;color:var(--ink);font-size:20px;font-weight:600;line-height:1.25;letter-spacing:-.018em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta-autor{margin:4px 0 0;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.meta-barra{
+  position:relative;overflow:hidden;
+  height:7px;margin:14px 0 8px;max-width:460px;
+  border:1px solid rgba(255,255,255,.6);border-radius:999px;
+  background:rgba(255,255,255,.34);
+  box-shadow:inset 0 1px 3px rgba(58,39,29,.12);
+}
+.meta-barra span{
+  position:absolute;inset:0 auto 0 0;
+  border-radius:999px;
+  background:linear-gradient(90deg,#4d4a44,#1b1714);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+.meta-cifras{margin:0;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.meta-cifras strong{color:var(--ink);font-weight:600}
+
+/* Sin libro elegido el banner se queda como invitación, más bajo y sin la columna de
+   la portada. Ocultarlo dejaría la función sin ninguna pista de que existe. */
+.meta-vacia{grid-template-columns:minmax(0,1fr);padding:18px 24px}
+.meta-vacia h2{font-size:17px;font-weight:600;white-space:normal}
+.meta-vacia .meta-autor{margin-top:6px;white-space:normal}
+
+.meta-acciones{display:flex;align-items:center;gap:10px}
+
+/* Secundario frente al CTA: mismo tamaño y forma, material de cristal en vez de tinta.
+   Terminar una lectura no es la acción que uno repite a diario. */
+.meta-terminado{
+  flex-shrink:0;padding:13px 22px;
+  border:1px solid rgba(255,255,255,.66);border-radius:999px;
+  background:linear-gradient(145deg,rgba(255,255,255,.56),rgba(255,255,255,.24));
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 20px rgba(43,51,67,.08),inset 0 1px 0 rgba(255,255,255,.8);
+  color:rgba(27,23,21,.82);font:inherit;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;
+  transition:transform .26s cubic-bezier(.4,0,.2,1),background .26s cubic-bezier(.4,0,.2,1),color .26s;
+}
+.meta-terminado:hover:not(:disabled){transform:translateY(-2px);background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(255,255,255,.4));color:var(--ink)}
+.meta-terminado:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.meta-terminado:disabled{opacity:.55;cursor:progress}
+
+.meta-accion{
+  flex-shrink:0;position:relative;
+  padding:13px 26px;
+  border:1px solid rgba(255,255,255,.18);border-radius:999px;
+  background:var(--ink);color:#fff;
+  font-size:13px;font-weight:500;white-space:nowrap;text-decoration:none;
+  box-shadow:0 10px 26px rgba(22,22,20,.24);
+  transition:transform .26s cubic-bezier(.4,0,.2,1),box-shadow .26s cubic-bezier(.4,0,.2,1);
+}
+/* El resplandor vive en un pseudo-elemento por detrás, no en la sombra del botón: así
+   puede desenfocarse y crecer sin arrastrar consigo el borde ni el fondo. */
+.meta-accion::after{
+  content:"";position:absolute;inset:-6px;z-index:-1;
+  border-radius:999px;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(120,140,200,.55),transparent 72%);
+  filter:blur(14px);opacity:0;
+  transition:opacity .26s cubic-bezier(.4,0,.2,1);
+}
+.meta-accion:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(22,22,20,.3)}
+.meta-accion:hover::after{opacity:1}
+.meta-accion:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+
+@media(max-width:900px){
+  /* Se apila: portada, texto y botón en vertical. El botón pasa a ancho completo porque
+     un CTA de 140px centrado en una tarjeta ancha se lee como un descuido. */
+  /* .intro baja a margin-top:28px en este tramo; el banner acompaña ese ritmo. */
+  .meta-semanal{grid-template-columns:auto minmax(0,1fr);gap:18px 20px;margin:26px 0;padding:18px}
+  .meta-acciones{grid-column:1/-1}
+  .meta-acciones .meta-accion,.meta-acciones .meta-terminado{flex:1;text-align:center}
+}
+@media(max-width:560px){
+  /* .intro usa margin:24px 0 en móvil; el banner iguala para no romper el ritmo vertical. */
+  .meta-semanal{grid-template-columns:1fr;justify-items:center;text-align:center;margin:22px 0;border-radius:24px}
+  .meta-cuerpo{width:100%}
+  .meta-etiqueta{justify-content:center}
+  .meta-cuerpo h2,.meta-autor{white-space:normal}
+  .meta-barra{margin-inline:auto}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .meta-barra span,.meta-accion,.meta-accion::after{transition:none}
+  .meta-accion:hover{transform:none}
+}
+
 .pdf-upload{border:0;padding:0;margin:2px 0 20px}
 .pdf-upload legend{margin-bottom:9px;color:#666;font-size:11px}
 .pdf-upload-content{display:grid;grid-template-columns:auto 1fr;gap:17px;align-items:center;padding:14px;border:1px solid rgba(255,255,255,.72);border-radius:16px;background:rgba(255,255,255,.34);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
@@ -142,3 +262,116 @@ body:after{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(229,234,
   .card-info .status{padding-inline:7px}
 }
 @media(max-width:760px){.sort-trigger{width:100%;min-height:44px}.sort-dropdown{left:0;right:0;min-width:0}}
+
+/* ---------- Libros destacados ---------- */
+
+/* 34px arriba y abajo, el mismo valor que .intro y .meta-semanal. `main` es un bloque
+   normal, así que el margen inferior del banner y el superior de esta sección COLAPSAN en
+   uno solo de 34px: no se suman a 68. Por eso los tres bloques mantienen el mismo ritmo.
+   Hacia abajo el margen sí cuenta entero, porque .category-filter-panel no tiene margen
+   superior, solo padding. */
+.destacados{margin:34px 0}
+/* .section-label vale #77736b porque siempre va DENTRO de un panel de cristal claro.
+   Este título va directo sobre el fondo de la app, que es marrón: ahí ese gris tiene
+   casi la misma luminosidad que el fondo y desaparece. Se oscurece y se sube a 600 para
+   recuperar contraste. Translúcido en negro y no en blanco, para que siga legible si el
+   fondo cambia a claro. */
+.destacados .section-label{margin:0 0 14px;padding-left:4px;color:rgba(28,20,16,.62);font-size:11px;font-weight:600}
+.destacados-rejilla{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+
+/* Misma receta que .book-card, a menor escala: fondo en degradado en vez de blanco plano,
+   borde claro, familia de sombras cálida y el mismo padding que abre una "escena" dentro.
+   Se lee como una hermana pequeña de las tarjetas de la biblioteca, no como otro módulo. */
+.destacado{
+  display:flex;flex-direction:column;overflow:hidden;
+  margin:0;padding:10px 10px 0;text-align:left;
+  border:1px solid rgba(255,255,255,.7);border-radius:26px;
+  background:linear-gradient(145deg,rgba(255,255,255,.27),rgba(255,255,255,.1));
+  backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);
+  box-shadow:0 22px 48px rgba(57,33,23,.16),0 6px 16px rgba(80,53,40,.08),inset 0 1px 0 rgba(255,255,255,.72);
+  transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s cubic-bezier(.4,0,.2,1);
+}
+button.destacado{cursor:pointer;font:inherit;color:inherit;appearance:none;-webkit-appearance:none}
+button.destacado:hover,button.destacado:focus-visible{transform:translateY(-4px);box-shadow:0 34px 68px rgba(56,31,21,.24),0 12px 26px rgba(88,56,40,.12),inset 0 1px 0 rgba(255,255,255,.85)}
+/* El libro se despega de la escena, igual que en .card-stage:hover. */
+button.destacado:hover .destacado-portada,button.destacado:focus-visible .destacado-portada{transform:translateY(-5px) scale(1.03);box-shadow:0 30px 54px rgba(33,19,13,.36),0 0 26px rgba(255,255,255,.12)}
+button.destacado:focus-visible{outline:2px solid rgba(37,29,24,.55);outline-offset:3px}
+
+/* La escena. Su altura es lo que decide la proporción de la tarjeta: con 290px, una
+   tarjeta de ~333px de ancho acaba midiendo ~376px de alto, o sea más alta que ancha.
+   Ahí está la diferencia con la versión anterior, que salía cuadrada. */
+.destacado-escena{position:relative;display:flex;align-items:center;justify-content:center;height:290px;overflow:hidden;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(245,235,226,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -14px 34px rgba(91,54,36,.05)}
+
+/* Proporción de portada real (2/3) y radio pequeño, como .card-stage .cover. */
+.destacado-portada{position:relative;display:block;width:132px;aspect-ratio:2/3;overflow:hidden;border-radius:4px;box-shadow:0 22px 40px rgba(33,19,13,.3),0 0 22px rgba(255,255,255,.08);transition:transform .3s cubic-bezier(.4,0,.2,1),box-shadow .3s cubic-bezier(.4,0,.2,1)}
+.destacado-portada img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* El mismo volumen que ya usan las portadas del catálogo: pliegue del lomo a la izquierda
+   y barrido de luz que se apaga en sombra hacia el canto derecho. Va en ::after para
+   pintarse también sobre la imagen de cubierta, no solo sobre el color de respaldo. */
+.destacado-portada::after{content:"";position:absolute;z-index:3;inset:0;pointer-events:none;background:linear-gradient(to right,rgba(0,0,0,.18) 0,rgba(0,0,0,0) 3px),linear-gradient(to right,rgba(255,255,255,.34) 0%,rgba(255,255,255,0) 12%,rgba(0,0,0,.06) 100%)}
+.destacado-monograma{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.34);font:500 40px/1 Georgia,serif}
+.destacado-favorito{position:absolute;z-index:4;top:8px;right:8px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font-size:11px;background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(30,20,12,.22)}
+
+.destacado-cuerpo{display:block;padding:14px 8px 16px}
+.destacado-titulo{display:block;color:var(--ink);font:500 17px/1.22 Georgia,serif;letter-spacing:-.02em}
+.destacado-autor{display:block;margin-top:6px;color:var(--muted);font:12px/1.3 Arial,Helvetica,sans-serif}
+
+@media(max-width:1080px){.destacados-rejilla{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.destacado-escena{height:270px}}
+
+@media(max-width:900px){
+  .destacados{margin:26px 0}
+  /* Deja de ser rejilla y pasa a carrusel: cuatro tarjetas apiladas en vertical obligarían
+     a hacer scroll por una sección secundaria antes de llegar a los filtros. `scroll-snap`
+     hace que cada tarjeta se detenga en su sitio en vez de quedar cortada por la mitad. */
+  .destacados-rejilla{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none}
+  .destacados-rejilla::-webkit-scrollbar{display:none}
+  .destacado{flex:0 0 min(196px,62%);scroll-snap-align:start;border-radius:22px;padding:8px 8px 0}
+  .destacado-escena{height:236px;border-radius:15px}
+  .destacado-portada{width:114px}
+}
+
+@media(max-width:560px){.destacados{margin:22px 0}}
+
+@media(prefers-reduced-motion:reduce){
+  .destacado,.destacado-portada{transition:none}
+  button.destacado:hover,button.destacado:focus-visible{transform:none}
+  button.destacado:hover .destacado-portada,button.destacado:focus-visible .destacado-portada{transform:none}
+}
+
+/* ---------- Frases destacadas ---------- */
+
+/* 34px como .intro, .meta-semanal y .destacados. Pediste 32-40; me quedo en el valor que
+   ya usan las secciones vecinas para no romper el ritmo vertical. Y recuerda que en un
+   contenedor de bloque los márgenes verticales COLAPSAN: entre el banner y esta sección
+   hay 34px, no 68. */
+.frases{margin:34px 0}
+.frases .section-label{margin:0 0 14px;padding-left:4px;color:rgba(28,20,16,.62);font-size:11px;font-weight:600}
+
+/* El radio va a 24px y no a los 16px que pediste: esta tarjeta vive entre el banner
+   semanal (28px) y las tarjetas de destacados (26px), y con 16 se leería como un descuido
+   más que como una decisión. Si lo prefieres exacto, es cambiar este número. */
+.frase-tarjeta{
+  position:relative;overflow:hidden;
+  margin:0;padding:clamp(30px,3.4vw,46px) clamp(26px,5vw,72px);
+  border:1px solid rgba(255,255,255,.7);border-radius:24px;
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  box-shadow:0 18px 40px rgba(58,39,29,.12),inset 0 1px 0 rgba(255,255,255,.75);
+}
+
+/* Las comillas se salen por arriba y las recorta el overflow de la tarjeta. Cortadas se
+   leen como textura editorial; enteras se leerían como un carácter suelto mal colocado. */
+.frase-comillas{position:absolute;top:-62px;left:16px;pointer-events:none;color:var(--ink);opacity:.06;font:700 220px/1 Georgia,serif}
+
+/* max-width en `ch`: la tarjeta ocupa todo el ancho, pero el renglón no debe. A 1400px una
+   línea de borde a borde pasa de 180 caracteres y el ojo pierde el salto de línea. 62ch es
+   el ancho de lectura cómodo de toda la vida, y el bloque se centra dentro de la tarjeta. */
+.frase-texto{position:relative;max-width:62ch;margin:0 auto;color:#241d18;font:italic 400 clamp(1.1rem,1.5vw,1.5rem)/1.6 Georgia,serif}
+.frase-autor{position:relative;max-width:62ch;margin:22px auto 0;text-align:right;color:var(--muted);font:11px/1 Arial,Helvetica,sans-serif;letter-spacing:.14em;text-transform:uppercase}
+
+@media(max-width:900px){
+  .frases{margin:26px 0}
+  .frase-tarjeta{padding:28px 26px;border-radius:20px}
+  .frase-comillas{top:-44px;left:8px;font-size:158px}
+}
+@media(max-width:560px){.frases{margin:22px 0}.frase-tarjeta{padding:24px 20px}}

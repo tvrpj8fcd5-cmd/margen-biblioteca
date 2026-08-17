@@ -2,15 +2,18 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { coverSrc } from "./cover-src";
+import { FrasesDestacadas } from "./frases-destacadas";
+import { LibrosDestacados } from "./libros-destacados";
+import { MetaSemanal } from "./meta-semanal";
 import { subirDocumentoFirmado } from "./supabase-navegador";
 
 type Status = "Leído" | "Leyendo" | "Por leer";
 type Category = "Literatura" | "Filosofía" | "Ciencia ficción" | "Educativo";
 type SortOrder = "recent" | "oldest" | "favorite";
-type Book = { id:number; title:string; author:string; year:string; status:Status; summary:string; ideas:string[]; quotes:string[]; rating:number; color:string; category:Category; coverKey:string; pdfKey:string; createdAt:string };
+type Book = { id:number; title:string; author:string; year:string; status:Status; summary:string; ideas:string[]; quotes:string[]; rating:number; color:string; category:Category; coverKey:string; pdfKey:string; favorito:boolean; esSemanal:boolean; vecesLeido:number; createdAt:string };
 type BookDraft = Omit<Book, "id" | "createdAt" | "ideas"> & { ideas:string };
 
-const emptyDraft: BookDraft = { title:"", author:"", year:String(new Date().getFullYear()), status:"Leyendo", summary:"", ideas:"", quotes:[""], rating:0, color:"ink", category:"Literatura", coverKey:"", pdfKey:"" };
+const emptyDraft: BookDraft = { title:"", author:"", year:String(new Date().getFullYear()), status:"Leyendo", summary:"", ideas:"", quotes:[""], rating:0, color:"ink", category:"Literatura", coverKey:"", pdfKey:"", favorito:false, esSemanal:false, vecesLeido:0 };
 const PDF_MAXIMO=25*1024*1024;
 const tones = ["ink","clay","sage","sand","wine","blue"];
 const categories:Category[]=["Literatura","Filosofía","Ciencia ficción","Educativo"];
@@ -48,6 +51,35 @@ export default function Home() {
   useEffect(()=>{ loadBooks(); },[]);
   useEffect(()=>()=>{if(coverPreview.startsWith("blob:"))URL.revokeObjectURL(coverPreview)},[coverPreview]);
   useEffect(()=>{const close=(event:PointerEvent)=>{if(!sortMenuRef.current?.contains(event.target as Node))setSortOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[]);
+
+  // Un solo punto por el que entran los libros actualizados desde cualquier acción.
+  // Sin esto, cada llamada tendría que acordarse de refrescar la lista Y el panel de
+  // detalle, y tarde o temprano una se olvidaría de lo segundo.
+  function aplicarLibro(actualizado:Book){
+    setBooks(actuales=>actuales.map(libro=>libro.id===actualizado.id?actualizado:libro));
+    setSelected(actual=>actual&&actual.id===actualizado.id?actualizado:actual);
+  }
+
+  // Marcar uno nuevo desmarca el anterior. La regla la impone la base con un índice único
+  // parcial; aquí solo hay que recargar, porque el libro que dejó de ser semanal también
+  // cambió y no viene en esta respuesta.
+  async function alternarSemanal(book:Book){
+    const accion=book.esSemanal?"quitar":"marcar";
+    const response=await fetch(`/api/books/${book.id}/semanal`,{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accion}),
+    });
+    if(!response.ok)return;
+    aplicarLibro(await response.json());
+    if(accion==="marcar")loadBooks();
+  }
+
+  // Un destacado que aún no está en la biblioteca abre el formulario con el título y el
+  // autor ya escritos. No se reutiliza openNewBook porque esa va directa a onClick y React
+  // le pasa el evento como primer argumento: darle parámetros ahí es pedir un bug.
+  function anadirDestacado(titulo:string,autor:string){
+    setDraft({...emptyDraft,title:titulo,author:autor});
+    setEditingId(null);setCoverFile(null);setCoverPreview("");setPdfFile(null);setFormError("");setShowForm(true);
+  }
 
   function openNewBook(){
     setDraft(emptyDraft);setEditingId(null);setCoverFile(null);setCoverPreview("");setPdfFile(null);setFormError("");setShowForm(true);
@@ -157,6 +189,12 @@ export default function Home() {
       <div className="intro-side"><p>Un lugar para reunir lo que lees, guardar lo esencial y volver a esas ideas que cambiaron algo en ti.</p><span>{books.length} libros · {books.filter(b=>b.status==="Leído").length} terminados</span></div>
     </section>
 
+    <MetaSemanal libros={books} onActualizar={aplicarLibro}/>
+
+    <FrasesDestacadas/>
+
+    <LibrosDestacados libros={books} onSeleccionar={setSelected} onAnadir={anadirDestacado}/>
+
     <section className="category-filter-panel" aria-label="Categorías de la biblioteca">
       <div className="library-toolbar">
         <div className="sort-control" ref={sortMenuRef}>
@@ -195,7 +233,7 @@ export default function Home() {
 
     {selected&&<div className="overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null)}}><aside className="detail" role="dialog" aria-modal="true" aria-label={`Notas de ${selected.title}`}>
       <button className="close" onClick={()=>setSelected(null)} aria-label="Cerrar">×</button>
-      <div className="detail-hero"><Cover book={selected} large/><div><p className="eyebrow">{selected.category} · {selected.status} · {selected.year}</p><h2>{selected.title}</h2><p className="author">{selected.author}</p>{selected.rating>0&&<div className="rating" aria-label={`${selected.rating} de 5 estrellas`}>{"●".repeat(selected.rating)}<span>{"●".repeat(5-selected.rating)}</span></div>}<button className="subtle" onClick={()=>cycleStatus(selected)}>Cambiar estado</button></div></div>
+      <div className="detail-hero"><Cover book={selected} large/><div><p className="eyebrow">{selected.category} · {selected.status} · {selected.year}{selected.vecesLeido>0&&` · leído ${selected.vecesLeido} ${selected.vecesLeido===1?"vez":"veces"}`}</p><h2>{selected.title}</h2><p className="author">{selected.author}</p>{selected.rating>0&&<div className="rating" aria-label={`${selected.rating} de 5 estrellas`}>{"●".repeat(selected.rating)}<span>{"●".repeat(5-selected.rating)}</span></div>}<button className="subtle" onClick={()=>cycleStatus(selected)}>Cambiar estado</button><button className="subtle" onClick={()=>alternarSemanal(selected)}>{selected.esSemanal?"Quitar de la meta semanal":"Libro de la semana"}</button></div></div>
       <div className="notes"><section><p className="section-label">EN POCAS PALABRAS</p><p className="summary">{selected.summary||"Aún no has escrito un resumen para este libro."}</p></section>
       <section><p className="section-label">IDEAS QUE ME LLEVO</p>{selected.ideas.length?<ol>{selected.ideas.map((idea,index)=><li key={index}><span>{String(index+1).padStart(2,"0")}</span><p>{idea}</p></li>)}</ol>:<p className="placeholder">Aquí aparecerán tus ideas principales.</p>}</section>
       {selected.quotes.length>0&&<section className="saved-quotes"><p className="section-label">CITAS PARA RECORDAR</p>{selected.quotes.map((quote,index)=><blockquote key={index}>“{quote}”<cite>— {selected.author}</cite></blockquote>)}</section>}</div>

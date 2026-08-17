@@ -97,6 +97,16 @@
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   color:#fff;font-size:9px;font-weight:600;letter-spacing:.12em;
 }
+/* Único punto de color de la cuadrícula: lo que el usuario ha marcado destaca sin
+   competir con las portadas. */
+.libro-favorito{
+  position:absolute;top:12px;left:12px;z-index:2;
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.55);border-radius:999px;
+  background:rgba(255,255,255,.26);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:#f0b530;font-size:12px;line-height:1;
+}
 /* Dos planos moviéndose a distinta distancia refuerzan la profundidad sin añadir adorno. */
 .libro-tarjeta:hover .libro-portada,.libro-tarjeta:focus-visible .libro-portada{transform:translateY(-4px) rotate(-1deg);box-shadow:0 20px 35px rgba(20,18,12,.24)}
 
@@ -139,28 +149,10 @@
   backdrop-filter:blur(32px) saturate(1.3);-webkit-backdrop-filter:blur(32px) saturate(1.3);
   animation:panel-entra .32s cubic-bezier(.4,0,.2,1);
 }
-.panel-lector{width:min(1100px,100%);height:min(92vh,1000px)}
-
-.panel-cabecera{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:32px 32px 24px;border-bottom:1px solid rgba(255,255,255,.42)}
-.panel-eyebrow{margin:0 0 8px;color:var(--muted);font-size:10px;font-weight:500;letter-spacing:.14em}
-.panel-cabecera h2{margin:0;color:var(--ink);font-size:24px;font-weight:600;line-height:1.2;letter-spacing:-.02em}
-.panel-subtitulo{margin:8px 0 0;color:var(--muted);font-size:14px}
-
-
 /* -------------------------------------------------------------- el visor ---- */
 
-.lector-lienzo{flex:1;min-height:0;display:flex;flex-direction:column}
-.lector-lienzo-pdf{padding:24px}
 /* El documento flota sobre el cristal: esquinas redondeadas, borde luminoso y sombra
    propia. El fondo blanco evita el parpadeo oscuro mientras el visor del navegador carga. */
-.lector-lienzo-pdf iframe{
-  flex:1;width:100%;min-height:0;display:block;
-  border:1px solid var(--glass-edge);border-radius:20px;
-  background:#fff;
-  box-shadow:0 24px 60px rgba(57,33,23,.22),inset 0 1px 0 rgba(255,255,255,.8);
-}
-.lector-lienzo-vacio{align-items:center;justify-content:center;gap:16px;padding:48px 32px}
-.lector-lienzo-vacio p{margin:0;color:var(--muted);font-size:14px;text-align:center}
 @keyframes capa-entra{from{opacity:0}to{opacity:1}}
 @keyframes panel-entra{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
 
@@ -185,10 +177,6 @@
      el espacio que el PDF necesita. */
   .capa{padding:0}
   .panel{border:0;border-radius:0}
-  .panel-lector{width:100%;height:100%;max-height:100dvh}
-  .panel-cabecera{padding:24px 20px 20px}
-  .lector-lienzo-pdf{padding:12px}
-  .lector-lienzo-pdf iframe{border-radius:14px}
 }
 
 /* El movimiento aquí comunica jerarquía, no decora. Si el sistema pide menos

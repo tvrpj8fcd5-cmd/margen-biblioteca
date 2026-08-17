@@ -1,0 +1,89 @@
+/* Visor de lectura.
+   Todos los colores salen de variables definidas en .lector, de modo que el modo oscuro
+   solo tiene que redefinirlas: ninguna otra regla conoce un color literal. */
+
+.lector{
+  --lector-tinta: #1b1714;
+  --lector-tinta-suave: rgba(27,23,20,.6);
+  --lector-borde: rgba(255,255,255,.7);
+  --lector-control: rgba(255,255,255,.46);
+  --lector-control-activo: rgba(255,255,255,.86);
+  --lector-papel: rgba(255,255,255,.5);
+
+  width:min(1100px,100%);height:min(92vh,1000px);
+}
+
+/* El tema es del visor, no de la aplicación: una superficie de lectura puede tener su
+   propio tinte sin arrastrar consigo a la biblioteca que queda detrás. */
+.lector[data-tema="oscuro"]{
+  --lector-tinta: #e9e5df;
+  --lector-tinta-suave: rgba(233,229,223,.58);
+  --lector-borde: rgba(255,255,255,.14);
+  --lector-control: rgba(255,255,255,.1);
+  --lector-control-activo: rgba(255,255,255,.24);
+  --lector-papel: rgba(28,27,32,.62);
+
+  background:linear-gradient(145deg,rgba(38,37,44,.72),rgba(22,21,26,.6));
+  border-color:rgba(255,255,255,.16);
+}
+
+/* ------------------------------------------------------------------- cabecera */
+
+.lector-cabecera{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:20px;padding:28px 32px 22px;border-bottom:1px solid var(--lector-borde)}
+.lector-eyebrow{margin:0 0 8px;color:var(--lector-tinta-suave);font-size:10px;font-weight:500;letter-spacing:.14em}
+.lector-cabecera h2{margin:0;color:var(--lector-tinta);font-size:22px;font-weight:600;line-height:1.2;letter-spacing:-.02em}
+.lector-autor{margin:6px 0 0;color:var(--lector-tinta-suave);font-size:14px}
+
+.lector-acciones{display:flex;align-items:center;gap:8px}
+
+.accion{
+  width:38px;height:38px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--lector-borde);border-radius:999px;
+  background:var(--lector-control);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+  color:var(--lector-tinta);font:inherit;font-size:15px;line-height:1;cursor:pointer;
+  transition:transform .22s cubic-bezier(.4,0,.2,1),background .22s cubic-bezier(.4,0,.2,1),color .22s;
+}
+.accion:hover:not(:disabled){transform:translateY(-2px);background:var(--lector-control-activo)}
+.accion:focus-visible{outline:2px solid var(--lector-tinta);outline-offset:3px}
+.accion:disabled{opacity:.5;cursor:progress}
+.accion[aria-pressed="true"]{background:var(--lector-control-activo)}
+/* La estrella marcada es el único punto de color de la interfaz: si algo tiene que
+   destacar en una superficie de lectura, que sea lo que el usuario ha elegido. */
+.accion.favorito{color:#d99a1c}
+
+/* -------------------------------------------------------------------- lectura */
+
+.lector-hoja{flex:1;min-height:0;padding:24px}
+.lector-hoja iframe{
+  width:100%;height:100%;display:block;
+  border:1px solid var(--lector-borde);border-radius:20px;
+  /* Fondo blanco fijo: evita el parpadeo oscuro mientras el visor del navegador carga,
+     y un PDF se imprime sobre papel blanco tenga el tema que tenga la interfaz. */
+  background:#fff;
+  box-shadow:0 24px 60px rgba(57,33,23,.22),inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+.lector-vacio{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:48px 32px}
+.lector-vacio p{margin:0;color:var(--lector-tinta-suave);font-size:14px;text-align:center}
+
+.lector[data-tema="oscuro"] .boton-cristal{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:var(--lector-tinta)}
+.lector[data-tema="oscuro"] .boton-cristal:hover{background:rgba(255,255,255,.2);color:#fff}
+
+/* ------------------------------------------------------------------ responsive */
+
+@media(max-width:720px){
+  .lector{width:100%;height:100%;max-height:100dvh;border:0;border-radius:0}
+  .lector-cabecera{padding:20px 16px 16px}
+  .lector-acciones{width:100%}
+  .lector-acciones .boton-cristal{margin-left:auto}
+  .lector-hoja{padding:12px}
+  .lector-hoja iframe{border-radius:14px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .accion{transition:none}
+  .accion:hover:not(:disabled){transform:none}
+}

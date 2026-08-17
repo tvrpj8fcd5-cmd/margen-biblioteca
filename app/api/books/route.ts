@@ -24,7 +24,7 @@ export async function POST(request:Request){
   if(!title||!author)return Response.json({error:"Título y autor son obligatorios"},{status:400});
   const database=db(), createdAt=new Date().toISOString();
   const quotes=Array.isArray(input.quotes)?input.quotes.map(String).map(value=>value.trim()).filter(Boolean):[];
-  const rows=await database.query(`INSERT INTO books (title,author,year,status,summary,ideas,quote,quotes,rating,color,category,cover_key,pdf_key,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING ${selectColumns}`,[title,author,String(input.year??""),String(input.status??"Por leer"),String(input.summary??""),JSON.stringify(Array.isArray(input.ideas)?input.ideas:[]),quotes[0]??"",JSON.stringify(quotes),Number(input.rating??0),String(input.color??"ink"),String(input.category??"Literatura"),String(input.coverKey??""),String(input.pdfKey??""),createdAt]) as BookRow[];
+  const rows=await database.query(`INSERT INTO books (title,author,year,status,summary,ideas,quote,quotes,rating,color,category,cover_key,pdf_key,favorito,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING ${selectColumns}`,[title,author,String(input.year??""),String(input.status??"Por leer"),String(input.summary??""),JSON.stringify(Array.isArray(input.ideas)?input.ideas:[]),quotes[0]??"",JSON.stringify(quotes),Number(input.rating??0),String(input.color??"ink"),String(input.category??"Literatura"),String(input.coverKey??""),String(input.pdfKey??""),Boolean(input.favorito),createdAt]) as BookRow[];
   const row=rows[0];
   return Response.json(row?present(row):{error:"No se pudo guardar"},{status:row?201:500});
   }catch(error){ return fallo("POST /api/books",error); }
