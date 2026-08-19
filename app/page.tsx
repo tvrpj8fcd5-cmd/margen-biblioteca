@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { coverSrc } from "./cover-src";
-import { FrasesDestacadas } from "./frases-destacadas";
+import { useCapaModal } from "./usar-capa-modal";
 import { LibrosDestacados } from "./libros-destacados";
 import { MetaSemanal } from "./meta-semanal";
 import { subirDocumentoFirmado } from "./supabase-navegador";
@@ -42,13 +43,36 @@ export default function Home() {
   const [formError,setFormError] = useState("");
   const [sortOpen,setSortOpen] = useState(false);
   const sortMenuRef=useRef<HTMLDivElement>(null);
+  const detalleRef=useRef<HTMLElement|null>(null);
+  const formularioRef=useRef<HTMLFormElement|null>(null);
+
+  // Las dos capas de esta pantalla no se cerraban con Escape, no llevaban el foco dentro y
+  // dejaban la página de detrás desplazándose. El lector de /coleccion ya resolvía todo eso
+  // con este hook; no había motivo para que aquí funcionara peor.
+  useCapaModal(Boolean(selected),()=>setSelected(null),detalleRef);
+  useCapaModal(showForm,()=>setShowForm(false),formularioRef);
 
   async function loadBooks(){
     const response=await fetch("/api/books");
     if(response.ok) setBooks(await response.json());
     setLoading(false);
   }
-  useEffect(()=>{ loadBooks(); },[]);
+
+  // La carga vive DENTRO del efecto, en una función asíncrona, y no como una llamada suelta
+  // a loadBooks(). Dos motivos: llamar en el cuerpo del efecto a una función que hace
+  // setState provoca renders en cascada —el eslint del proyecto lo marcaba como error—, y
+  // la bandera `cancelado` evita escribir estado si el componente se desmonta antes de que
+  // la petición vuelva. `loading` ya arranca en true, así que aquí solo se apaga.
+  useEffect(()=>{
+    let cancelado=false;
+    void (async()=>{
+      const response=await fetch("/api/books");
+      if(cancelado)return;
+      if(response.ok)setBooks(await response.json());
+      setLoading(false);
+    })();
+    return ()=>{ cancelado=true };
+  },[]);
   useEffect(()=>()=>{if(coverPreview.startsWith("blob:"))URL.revokeObjectURL(coverPreview)},[coverPreview]);
   useEffect(()=>{const close=(event:PointerEvent)=>{if(!sortMenuRef.current?.contains(event.target as Node))setSortOpen(false)};document.addEventListener("pointerdown",close);return()=>document.removeEventListener("pointerdown",close)},[]);
 
@@ -176,9 +200,12 @@ export default function Home() {
       <button className="brand" onClick={()=>{setFilter("Todos");setQuery("")}} aria-label="Margen, inicio"><span>m</span></button>
       <nav aria-label="Navegación principal">
         <button onClick={()=>setFilter("Todos")} className="nav-item active">Mi biblioteca</button>
-        <a className="nav-item catalog-nav-link" href="/coleccion">Mi colección</a>
-        <a className="nav-item catalog-nav-link" href="/catalogo">Catálogo detallado</a>
-        <a className="nav-item catalog-nav-link" href="/chat">Chat de la Obra</a>
+        {/* <Link> y no <a>: con <a> cada salto recargaba la aplicación entera —se perdía
+            el estado, se volvían a pedir los libros y la transición parpadeaba—, justo lo
+            contrario de la navegación de una sola página que persigue el proyecto. */}
+        <Link className="nav-item catalog-nav-link" href="/coleccion">Mi colección</Link>
+        <Link className="nav-item catalog-nav-link" href="/catalogo">Catálogo detallado</Link>
+        <Link className="nav-item catalog-nav-link" href="/chat">Chat de la Obra</Link>
       </nav>
       <label className="search"><span aria-hidden="true">⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Buscar libros" placeholder="Buscar en tus notas..." /></label>
       <button className="add-button" onClick={openNewBook}><span aria-hidden="true">+</span> Añadir libro</button>
@@ -190,8 +217,6 @@ export default function Home() {
     </section>
 
     <MetaSemanal libros={books} onActualizar={aplicarLibro}/>
-
-    <FrasesDestacadas/>
 
     <LibrosDestacados libros={books} onSeleccionar={setSelected} onAnadir={anadirDestacado}/>
 
@@ -231,7 +256,7 @@ export default function Home() {
       </article>)}</section>
       : <div className="empty"><strong>No hay libros por aquí.</strong><span>{query?"Prueba otra búsqueda.":"Añade tu próxima lectura y empieza a guardar ideas."}</span>{!query&&<button onClick={openNewBook}>Añadir un libro</button>}</div>}
 
-    {selected&&<div className="overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null)}}><aside className="detail" role="dialog" aria-modal="true" aria-label={`Notas de ${selected.title}`}>
+    {selected&&<div className="overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelected(null)}}><aside className="detail" ref={detalleRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`Notas de ${selected.title}`}>
       <button className="close" onClick={()=>setSelected(null)} aria-label="Cerrar">×</button>
       <div className="detail-hero"><Cover book={selected} large/><div><p className="eyebrow">{selected.category} · {selected.status} · {selected.year}{selected.vecesLeido>0&&` · leído ${selected.vecesLeido} ${selected.vecesLeido===1?"vez":"veces"}`}</p><h2>{selected.title}</h2><p className="author">{selected.author}</p>{selected.rating>0&&<div className="rating" aria-label={`${selected.rating} de 5 estrellas`}>{"●".repeat(selected.rating)}<span>{"●".repeat(5-selected.rating)}</span></div>}<button className="subtle" onClick={()=>cycleStatus(selected)}>Cambiar estado</button><button className="subtle" onClick={()=>alternarSemanal(selected)}>{selected.esSemanal?"Quitar de la meta semanal":"Libro de la semana"}</button></div></div>
       <div className="notes"><section><p className="section-label">EN POCAS PALABRAS</p><p className="summary">{selected.summary||"Aún no has escrito un resumen para este libro."}</p></section>
@@ -240,9 +265,9 @@ export default function Home() {
       <div className="detail-actions"><button className="danger" onClick={()=>deleteBook(selected)}>Eliminar</button><button className="primary" onClick={()=>{setDraft({...selected,ideas:selected.ideas.join("\n"),quotes:selected.quotes.length?selected.quotes:[""]});setEditingId(selected.id);setCoverFile(null);setCoverPreview(selected.coverKey?coverSrc(selected.coverKey):"");setFormError("");setSelected(null);setShowForm(true)}}>Editar notas</button></div>
     </aside></div>}
 
-    {showForm&&<div className="overlay form-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><form className="book-form" onSubmit={addBook}>
+    {showForm&&<div className="overlay form-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setShowForm(false)}}><form className="book-form" ref={formularioRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={editingId?"Editar lectura":"Añadir a la biblioteca"} onSubmit={addBook}>
       <div className="form-head"><div><p className="eyebrow">{editingId?"ACTUALIZAR ENTRADA":"NUEVA ENTRADA"}</p><h2>{editingId?"Editar lectura":"Añadir a la biblioteca"}</h2></div><button type="button" className="close" onClick={()=>setShowForm(false)} aria-label="Cerrar">×</button></div>
-      <div className="form-grid"><label><span>Título</span><input required autoFocus value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})} placeholder="El nombre del libro"/></label><label><span>Autor</span><input required value={draft.author} onChange={e=>setDraft({...draft,author:e.target.value})} placeholder="Nombre del autor"/></label><label><span>Año</span><input value={draft.year} onChange={e=>setDraft({...draft,year:e.target.value})}/></label><label><span>Estado</span><select value={draft.status} onChange={e=>setDraft({...draft,status:e.target.value as Status})}><option>Por leer</option><option>Leyendo</option><option>Leído</option></select></label><label><span>Categoría</span><select value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as Category})}>{categories.map(category=><option key={category}>{category}</option>)}</select></label></div>
+      <div className="form-grid"><label><span>Título</span><input required value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})} placeholder="El nombre del libro"/></label><label><span>Autor</span><input required value={draft.author} onChange={e=>setDraft({...draft,author:e.target.value})} placeholder="Nombre del autor"/></label><label><span>Año</span><input value={draft.year} onChange={e=>setDraft({...draft,year:e.target.value})}/></label><label><span>Estado</span><select value={draft.status} onChange={e=>setDraft({...draft,status:e.target.value as Status})}><option>Por leer</option><option>Leyendo</option><option>Leído</option></select></label><label><span>Categoría</span><select value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as Category})}>{categories.map(category=><option key={category}>{category}</option>)}</select></label></div>
       <fieldset className="cover-upload"><legend>Imagen de portada <small>Opcional</small></legend><div className="cover-upload-content">{coverPreview?<img src={coverPreview} alt="Vista previa de la portada"/>:<div className={`cover-upload-placeholder tone-${draft.color}`}><small>PORTADA AUTOMÁTICA</small><strong>{draft.title||"Tu libro"}</strong></div>}<div className="cover-upload-actions"><label htmlFor="cover-file">{coverFile||draft.coverKey?"Cambiar imagen":"Elegir imagen"}</label><input id="cover-file" type="file" accept="image/jpeg,image/png,image/webp" onChange={event=>chooseCover(event.target.files?.[0]??null)}/><p>JPG, PNG o WebP · Máximo 4 MB. Si no eliges una imagen, usaremos la portada automática.</p>{(coverFile||draft.coverKey)&&<button type="button" onClick={()=>{setCoverFile(null);setCoverPreview("");setPdfFile(null);setDraft({...draft,coverKey:""})}}>Usar portada automática</button>}</div></div></fieldset>
       {/* Control aparte del de la portada: son dos archivos distintos, con formatos,
           límites y destinos distintos. Compartir un solo botón obligaría a adivinar por

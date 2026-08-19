@@ -40,3 +40,8 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+
+# Carpeta de descarte: aqui se aparta lo que hay que borrar a mano.
+# No puedo eliminar archivos a traves del puente, asi que se apartan aqui en vez
+# de borrarse. Nunca debe entrar al repositorio.
+/_to_delete/

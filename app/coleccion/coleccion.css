@@ -9,7 +9,7 @@
 
 /* Doble clase para ganar en especificidad a las variantes de .topbar que globals.css
    declara dentro de sus media queries, sin depender del orden de los archivos CSS. */
-.topbar.coleccion-topbar{position:sticky;top:18px;z-index:20;grid-template-columns:auto 1fr;margin-bottom:40px}
+.topbar.coleccion-topbar{position:sticky;top:18px;z-index:50;grid-template-columns:auto 1fr;margin-bottom:40px}
 .topbar.coleccion-topbar nav{display:flex;gap:16px;align-items:center}
 .topbar.coleccion-topbar .nav-item{text-decoration:none}
 .topbar.coleccion-topbar span.nav-item{cursor:default}

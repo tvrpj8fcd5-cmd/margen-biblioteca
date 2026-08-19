@@ -30,12 +30,16 @@ const mockBooks:CatalogBook[]=[
   {id:8,titulo:"Hábitos atómicos",autor:"James Clear",portada_url:"https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg",resumen:"Un método práctico para construir buenos hábitos, abandonar los perjudiciales y lograr cambios notables mediante mejoras pequeñas y constantes.",estado_leido:true,calificacion:4,progreso:100,tono:"ochre"},
 ];
 
+// Esta pantalla ES el catálogo detallado, así que es el catálogo lo que va marcado como
+// página actual. Antes se marcaba "Mi Biblioteca", que además ni siquiera es esta ruta:
+// era un botón inerte y encima señalaba a otro sitio.
+// "Ajustes" se retiró: no hay ninguna pantalla de ajustes detrás, y un botón que no hace
+// nada al pulsarlo es peor que no tenerlo.
 const navItems=[
-  {label:"Inicio",icon:"⌂",href:"/"},
-  {label:"Mi Biblioteca",icon:"▦",active:true},
+  {label:"Mi biblioteca",icon:"⌂",href:"/"},
   {label:"Mi colección",icon:"◫",href:"/coleccion"},
+  {label:"Catálogo detallado",icon:"▦",active:true},
   {label:"Chat de la Obra",icon:"◌",href:"/chat"},
-  {label:"Ajustes",icon:"⚙"},
 ];
 
 function BookCover({book,large=false}:{book:CatalogBook;large?:boolean}){
@@ -98,9 +102,16 @@ export default function CatalogPage(){
     <aside className="catalog-nav" aria-label="Navegación del catálogo">
       <Link className="catalog-mark" href="/" aria-label="Volver a Margen">m</Link>
       <nav>
-        {navItems.map(item=>item.href?<Link key={item.label} href={item.href} aria-label={item.label} title={item.label}>{item.icon}</Link>:<button key={item.label} className={item.active?"active":""} aria-current={item.active?"page":undefined} aria-label={item.label} title={item.label}>{item.icon}</button>)}
+        {/* La página actual es un <span>, no un <button>: no es una acción que se pueda
+            pulsar, es un rótulo de dónde estás. Como <button> quedaba en el orden de
+            tabulación prometiendo algo que no ocurría. */}
+        {navItems.map(item=>item.href
+          ? <Link key={item.label} href={item.href} aria-label={item.label} title={item.label}>{item.icon}</Link>
+          : <span key={item.label} className="active" aria-current="page" title={item.label}>{item.icon}</span>)}
       </nav>
-      <button className="catalog-profile" aria-label="Perfil" title="Perfil">CR</button>
+      {/* Sin autenticación no hay perfil al que ir. Se queda como distintivo, no como
+          botón: antes era pulsable y no ocurría nada. */}
+      <span className="catalog-profile" aria-hidden="true">CR</span>
     </aside>
 
     <section className="catalog-gallery" aria-labelledby="catalog-title">

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { coverSrc } from "../cover-src";
 import "./chat.css";
@@ -183,9 +185,19 @@ export default function ChatPage(){
 
   return <main className="chat-page">
     <aside className="chat-nav" aria-label="Navegación de Chat de la Obra">
-      <a className="chat-mark" href="/" aria-label="Margen, inicio">m</a>
-      <nav><a href="/" title="Inicio" aria-label="Inicio">⌂</a><a href="/catalogo" title="Mi Biblioteca" aria-label="Mi Biblioteca">▦</a><a href="/coleccion" title="Mi colección" aria-label="Mi colección">◫</a><a href="/chat" className="active" aria-current="page" title="Chat" aria-label="Chat">◌</a><button title="Ajustes" aria-label="Ajustes">⚙</button></nav>
-      <button className="chat-profile" title="Perfil" aria-label="Perfil">CR</button>
+      <Link className="chat-mark" href="/" aria-label="Margen, inicio">m</Link>
+      {/* <Link> en vez de <a>: con <a> saltar de sección recargaba la aplicación entera.
+          El enlace a /catalogo se llamaba "Mi Biblioteca", que es el nombre de la portada:
+          apuntaba a un sitio y decía el nombre de otro. Y "Ajustes" no llevaba a ninguna
+          parte, así que se retira. */}
+      <nav>
+        <Link href="/" title="Mi biblioteca" aria-label="Mi biblioteca">⌂</Link>
+        <Link href="/coleccion" title="Mi colección" aria-label="Mi colección">◫</Link>
+        <Link href="/catalogo" title="Catálogo detallado" aria-label="Catálogo detallado">▦</Link>
+        <Link href="/chat" className="active" aria-current="page" title="Chat de la Obra" aria-label="Chat de la Obra">◌</Link>
+      </nav>
+      {/* Sin autenticación no hay perfil al que ir: distintivo, no botón. */}
+      <span className="chat-profile" aria-hidden="true">CR</span>
     </aside>
 
     <aside className="book-context" aria-labelledby="context-title">
