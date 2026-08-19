@@ -199,13 +199,25 @@ export default function Home() {
     <header className="topbar">
       <button className="brand" onClick={()=>{setFilter("Todos");setQuery("")}} aria-label="Margen, inicio"><span>m</span></button>
       <nav aria-label="Navegación principal">
-        <button onClick={()=>setFilter("Todos")} className="nav-item active">Mi biblioteca</button>
+        {/* Cada sección lleva dos rótulos y el CSS enseña uno u otro según el ancho. En un
+            móvil de 390px los cuatro nombres largos suman más de lo que cabe, y la
+            alternativa —dejar que se desplacen— esconde justo las dos últimas secciones
+            detrás de un gesto que nadie tiene por qué adivinar. */}
+        <button onClick={()=>setFilter("Todos")} className="nav-item active">
+          <span className="nav-largo">Mi biblioteca</span><span className="nav-corto">Biblioteca</span>
+        </button>
         {/* <Link> y no <a>: con <a> cada salto recargaba la aplicación entera —se perdía
             el estado, se volvían a pedir los libros y la transición parpadeaba—, justo lo
             contrario de la navegación de una sola página que persigue el proyecto. */}
-        <Link className="nav-item catalog-nav-link" href="/coleccion">Mi colección</Link>
-        <Link className="nav-item catalog-nav-link" href="/catalogo">Catálogo detallado</Link>
-        <Link className="nav-item catalog-nav-link" href="/chat">Chat de la Obra</Link>
+        <Link className="nav-item catalog-nav-link" href="/coleccion">
+          <span className="nav-largo">Mi colección</span><span className="nav-corto">Colección</span>
+        </Link>
+        <Link className="nav-item catalog-nav-link" href="/catalogo">
+          <span className="nav-largo">Catálogo detallado</span><span className="nav-corto">Catálogo</span>
+        </Link>
+        <Link className="nav-item catalog-nav-link" href="/chat">
+          <span className="nav-largo">Chat de la Obra</span><span className="nav-corto">Chat</span>
+        </Link>
       </nav>
       <label className="search"><span aria-hidden="true">⌕</span><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Buscar libros" placeholder="Buscar en tus notas..." /></label>
       <button className="add-button" onClick={openNewBook}><span aria-hidden="true">+</span> Añadir libro</button>

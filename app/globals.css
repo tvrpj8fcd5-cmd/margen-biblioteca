@@ -97,7 +97,8 @@ body:after{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(229,234,
 .sort-control:focus-within{border-color:rgba(255,255,255,.94);box-shadow:0 0 0 1px rgba(255,255,255,.36),0 0 24px rgba(255,255,255,.76),0 16px 34px rgba(43,51,67,.12)}
 .sort-control select option{background:#fff;color:#1c1d21}
 .sort-control select optgroup{background:#fff;color:#777;font-weight:700}
-.nav-item{display:flex;align-items:center;text-decoration:none;white-space:nowrap}.catalog-nav-link{color:#57544f}
+.nav-item{display:flex;align-items:center;text-decoration:none;white-space:nowrap}
+.nav-corto{display:none}.catalog-nav-link{color:#57544f}
 .sort-control:after{content:none}.sort-trigger{min-width:150px;min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:18px;border:1px solid rgba(255,255,255,.46);border-radius:999px;padding:10px 14px 10px 16px;background:linear-gradient(145deg,rgba(255,255,255,.42),rgba(255,255,255,.16));color:rgba(27,23,21,.76);cursor:pointer;box-shadow:0 8px 20px rgba(43,51,67,.08),inset 0 1px 0 rgba(255,255,255,.72);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.sort-trigger b{font-size:12px;font-weight:500}.sort-trigger i{font-style:normal;font-size:14px;transition:transform .2s ease}.sort-trigger[aria-expanded="true"] i{transform:rotate(180deg)}.sort-dropdown{position:absolute;z-index:45;top:calc(100% + 10px);left:0;min-width:250px;padding:10px;border:1px solid rgba(255,255,255,.9);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(246,248,252,.86));box-shadow:0 28px 65px rgba(43,51,67,.2),inset 0 1px 0 #fff;backdrop-filter:blur(30px) saturate(1.18);-webkit-backdrop-filter:blur(30px) saturate(1.18);animation:sortMenuIn .18s ease}.sort-dropdown-label{margin:5px 12px 6px;color:#8a8782;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.sort-dropdown-divider{height:1px;margin:7px 8px;background:rgba(99,105,117,.12)}.sort-dropdown button{width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid transparent;border-radius:15px;padding:10px 13px;background:transparent;color:#56534f;font-size:12px;text-align:left;cursor:pointer}.sort-dropdown button:hover,.sort-dropdown button.selected{border-color:rgba(255,255,255,.92);background:rgba(255,255,255,.72);color:#181614;box-shadow:0 8px 18px rgba(51,61,82,.08),inset 0 1px 0 #fff}.sort-dropdown button span{color:#3d7853;font-size:13px}.library{position:relative;z-index:1}@keyframes sortMenuIn{from{opacity:0;transform:translateY(-5px)}}
 .quotes-editor{border:0;padding:0;margin:0 0 16px}.quotes-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:9px}.quotes-head legend{margin:0}.quotes-head small{color:#aaa}.quotes-head button{border:1px solid rgba(255,255,255,.72);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.42);color:#484540;font-size:11px;cursor:pointer;box-shadow:0 6px 18px rgba(43,51,67,.08),inset 0 1px 0 rgba(255,255,255,.82);backdrop-filter:blur(16px)}.quote-input{position:relative;margin-bottom:10px}.quote-input textarea{padding-right:42px}.quote-input>button{position:absolute;top:9px;right:9px;width:26px;height:26px;border:1px solid #ddd8d0;border-radius:50%;background:rgba(255,255,255,.82);color:#888;font-size:18px;line-height:1;cursor:pointer}.saved-quotes{padding:30px 0}.saved-quotes blockquote{margin:12px 0}.saved-quotes blockquote:first-of-type{margin-top:0}
 .catalog-link{width:max-content;display:flex;align-items:center;gap:9px;margin-top:22px;padding:11px 16px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:#1d1a18;color:#fff;text-decoration:none;font-size:12px;font-weight:600;box-shadow:0 12px 26px rgba(31,25,22,.18),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .22s ease,box-shadow .22s ease}.catalog-link i{font-style:normal;font-size:15px}.catalog-link:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(31,25,22,.24),inset 0 1px 0 rgba(255,255,255,.2)}.catalog-link:focus-visible{outline:2px solid rgba(49,72,122,.55);outline-offset:3px}
@@ -350,4 +351,53 @@ button.destacado:focus-visible{outline:2px solid rgba(37,29,24,.55);outline-offs
   .destacado,.destacado-portada{transition:none}
   button.destacado:hover,button.destacado:focus-visible{transform:none}
   button.destacado:hover .destacado-portada,button.destacado:focus-visible .destacado-portada{transform:none}
+}
+
+/* ---------- Navegación de la portada en el móvil ----------
+
+   El fallo: a partir de 760px la barra superior escondía su <nav> y no ponía nada en su
+   lugar, así que desde el teléfono la portada era una trampa —no había forma de llegar a
+   Mi colección, al Catálogo ni al Chat—. Las otras tres vistas sí resuelven su navegación
+   en pantalla estrecha; esta era la única que no.
+
+   No se resuelve encogiendo: marca + buscador + botón de añadir + cuatro secciones no
+   caben en una fila de 390px. Se resuelve dándole a la navegación su PROPIA fila, con
+   desplazamiento horizontal si hiciera falta. La barra crece unos 46px, que es el precio
+   honesto de poder salir de la pantalla. */
+@media(max-width:760px){
+  .topbar{
+    height:auto;
+    grid-template-areas:"marca busqueda anadir" "navegacion navegacion navegacion";
+    gap:10px 12px;
+    padding:12px 14px;
+  }
+  .topbar .brand{grid-area:marca}
+  .topbar .search{grid-area:busqueda}
+  .topbar .add-button{grid-area:anadir}
+
+  /* `display:flex` pisa el `display:none` de más arriba. El scroll horizontal es la red de
+     seguridad: si algún día hay una sección más, se desplaza en vez de romper la fila. */
+  .topbar nav{
+    grid-area:navegacion;
+    display:flex;gap:8px;
+    overflow-x:auto;overscroll-behavior-x:contain;
+    scrollbar-width:none;-ms-overflow-style:none;
+    margin:0 -2px;padding:0 2px 2px;
+  }
+  .topbar nav::-webkit-scrollbar{display:none}
+  /* 38px de alto para que el dedo acierte; el punto de "activo" vive a 16px del borde
+     inferior y en una barra baja caeria encima del texto, asi que aqui se sustituye
+     por una pastilla clara. */
+  .topbar .nav-item{flex:none;min-height:38px;white-space:nowrap;font-size:13px;padding:8px 12px}
+  .topbar .nav-item.active{border-radius:999px;background:rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
+  .topbar .nav-item.active:after{content:none}
+  /* Rótulos cortos: con los largos, las cuatro secciones no caben en 390px. */
+  .nav-largo{display:none}
+  .nav-corto{display:inline}
+}
+/* Por debajo de 380px (iPhone SE y compania) las cuatro secciones se salen por 19px.
+   Apretando el hueco y el relleno caben sin tener que deslizar. */
+@media(max-width:380px){
+  .topbar nav{gap:4px}
+  .topbar .nav-item{padding:8px 9px}
 }
