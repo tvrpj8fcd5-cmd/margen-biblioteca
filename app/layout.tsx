@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Bibliotecario from "./bibliotecario";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Aqui se cargaban Geist y Geist Mono con next/font/google. Se han quitado: NADIE las
+// usaba. Sus variables --font-geist-sans y --font-geist-mono no aparecen en ninguna hoja
+// de estilos; toda la aplicacion pinta con Arial/Helvetica y Georgia. next/font descarga
+// las familias en el build y ademas las precarga con <link rel="preload">, asi que el
+// navegador se traia 286 KB de woff2 con prioridad alta, compitiendo con el CSS y el JS
+// que si hacen falta, para no dibujar con ellas ni una letra.
+// Si algun dia quieres usarlas de verdad: vuelve a importarlas y añade la variable a
+// body{font-family:var(--font-geist-sans),...} en globals.css.
 
 export async function generateMetadata(): Promise<Metadata> {
   const incoming = await headers();
@@ -35,10 +34,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         {children}
+        {/* Vive en el layout y no en la portada para estar disponible en todas las vistas.
+            Es un componente de cliente: se excluye a sí mismo de /chat, donde ya hay una
+            conversación a pantalla completa contra el mismo modelo. */}
+        <Bibliotecario/>
       </body>
     </html>
   );

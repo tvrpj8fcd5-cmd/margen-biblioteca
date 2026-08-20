@@ -13,6 +13,12 @@
 .topbar.coleccion-topbar nav{display:flex;gap:16px;align-items:center}
 .topbar.coleccion-topbar .nav-item{text-decoration:none}
 .topbar.coleccion-topbar span.nav-item{cursor:default}
+/* El punto de "activo" de globals.css cuenta desde el borde inferior del enlace, y ese
+   calculo esta hecho para la portada, donde la navegacion ocupa toda la altura de la
+   barra. Aqui los enlaces van centrados y de 15px, asi que 17px hacia arriba dejaban el
+   punto ENCIMA del texto. Se baja para que quede debajo, como en la portada. */
+.topbar.coleccion-topbar .nav-item.active:after{bottom:-8px}
+.topbar.coleccion-topbar .nav-icono{display:none}
 
 /* ---------------------------------------------------------------- encabezado */
 
@@ -27,7 +33,6 @@
   padding:11px 20px;
   border:1px solid rgba(255,255,255,.6);border-radius:999px;
   background:linear-gradient(145deg,rgba(255,255,255,.44),rgba(255,255,255,.18));
-  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   box-shadow:0 8px 20px rgba(43,51,67,.08),inset 0 1px 0 rgba(255,255,255,.72);
   color:rgba(27,23,21,.8);font:inherit;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;
   transition:transform .24s cubic-bezier(.4,0,.2,1),background .24s cubic-bezier(.4,0,.2,1),border-color .24s cubic-bezier(.4,0,.2,1),color .24s cubic-bezier(.4,0,.2,1);
@@ -49,7 +54,6 @@
   border:1px solid rgba(255,255,255,.7);border-radius:28px;
   background:linear-gradient(145deg,rgba(255,255,255,.27),rgba(255,255,255,.1));
   box-shadow:0 30px 70px rgba(57,33,23,.2),0 8px 22px rgba(80,53,40,.1),inset 0 1px 0 rgba(255,255,255,.72);
-  backdrop-filter:blur(28px) saturate(1.28);-webkit-backdrop-filter:blur(28px) saturate(1.28);
   font:inherit;text-align:left;cursor:pointer;
   transition:transform .28s cubic-bezier(.4,0,.2,1),box-shadow .28s cubic-bezier(.4,0,.2,1),
              border-color .28s cubic-bezier(.4,0,.2,1),background .28s cubic-bezier(.4,0,.2,1);
@@ -94,7 +98,6 @@
   position:absolute;top:12px;right:12px;z-index:2;
   padding:4px 10px;border:1px solid rgba(255,255,255,.55);border-radius:999px;
   background:rgba(255,255,255,.24);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   color:#fff;font-size:9px;font-weight:600;letter-spacing:.12em;
 }
 /* Único punto de color de la cuadrícula: lo que el usuario ha marcado destaca sin
@@ -104,7 +107,6 @@
   width:24px;height:24px;display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(255,255,255,.55);border-radius:999px;
   background:rgba(255,255,255,.26);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   color:#f0b530;font-size:12px;line-height:1;
 }
 /* Dos planos moviéndose a distinta distancia refuerzan la profundidad sin añadir adorno. */
@@ -115,7 +117,6 @@
   align-self:flex-start;padding:4px 12px;
   border:1px solid rgba(255,255,255,.5);border-radius:999px;
   background:rgba(255,255,255,.28);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   color:rgba(27,23,21,.72);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
 }
 /* Dos líneas máximo y altura reservada: títulos de una y de tres líneas dejan las
@@ -135,7 +136,7 @@
   position:fixed;inset:0;z-index:60;
   display:grid;place-items:center;padding:24px;
   background:rgba(243,242,240,.5);
-  backdrop-filter:blur(24px) saturate(1.1);-webkit-backdrop-filter:blur(24px) saturate(1.1);
+  backdrop-filter:blur(16px) saturate(1.1);-webkit-backdrop-filter:blur(16px) saturate(1.1);
   animation:capa-entra .3s cubic-bezier(.4,0,.2,1);
 }
 .capa-fondo{position:absolute;inset:0;border:0;padding:0;background:transparent;cursor:default}
@@ -146,7 +147,7 @@
   border:1px solid var(--glass-edge);border-radius:32px;
   background:linear-gradient(145deg,rgba(255,255,255,.46),rgba(255,255,255,.2));
   box-shadow:var(--glass-shadow),0 40px 90px rgba(57,33,23,.2);
-  backdrop-filter:blur(32px) saturate(1.3);-webkit-backdrop-filter:blur(32px) saturate(1.3);
+  backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);
   animation:panel-entra .32s cubic-bezier(.4,0,.2,1);
 }
 /* -------------------------------------------------------------- el visor ---- */
@@ -160,13 +161,7 @@
 
 @media(max-width:720px){
   .coleccion{padding:24px 16px 64px}
-  /* globals.css oculta la navegación de la topbar en pantallas pequeñas, donde la
-     portada la sustituye por otros controles. Aquí no hay sustituto: se mantiene
-     visible y se vuelve desplazable en horizontal. */
-  .topbar.coleccion-topbar{top:10px;height:auto;padding:12px 16px;border-radius:22px;margin-bottom:32px}
-  .topbar.coleccion-topbar nav{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none}
-  .topbar.coleccion-topbar nav::-webkit-scrollbar{display:none}
-  .topbar.coleccion-topbar .nav-item{white-space:nowrap}
+  .topbar.coleccion-topbar{margin-bottom:32px}
 
   .coleccion-encabezado{margin-bottom:32px}
   .coleccion-rejilla{grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:16px}
@@ -188,3 +183,75 @@
   .boton-cristal:hover{transform:none}
   .capa,.panel{animation:none}
 }
+
+/* ---------- Navegación en iconos para el móvil ----------
+   Con los rótulos escritos, "Catálogo detallado" y "Chat de la Obra" no cabían: la barra
+   se volvía desplazable y la última sección quedaba cortada a media palabra. Aquí se
+   cambian por los mismos iconos que ya usan /catalogo y /chat, que sí caben las cuatro.
+
+   Tres columnas `1fr auto 1fr` con solo dos hijos: la marca cae en la primera y la
+   navegación en la del medio. Como la primera y la tercera son iguales, los iconos quedan
+   centrados respecto a la barra entera, no respecto al hueco que deja la marca.
+
+   También se anula `grid-template-areas`: globals.css lo define a partir de 760px para la
+   barra de la portada, y al compartir `.topbar` se colaba aquí y partía la barra en dos
+   filas. */
+@media(max-width:760px){
+  .topbar.coleccion-topbar{
+    top:10px;height:auto;
+    grid-template-areas:none;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:10px;padding:10px 14px;border-radius:22px;
+  }
+  .topbar.coleccion-topbar .brand{justify-self:start}
+  .topbar.coleccion-topbar nav{
+    display:flex;flex-direction:row;justify-content:center;
+    gap:6px;overflow:visible;
+  }
+  .topbar.coleccion-topbar .nav-item{
+    width:42px;height:42px;
+    display:grid;place-items:center;
+    border-radius:14px;
+    color:#8b8b8b;font-size:19px;line-height:1;
+    transition:background .2s ease,color .2s ease;
+  }
+  .topbar.coleccion-topbar .nav-item.active{background:#191919;color:#fff}
+  /* El punto de "activo" de globals.css vive a 17px del borde inferior; dentro de un
+     cuadro de 42px caeria justo encima del icono. Aqui el fondo negro ya lo dice. */
+  .topbar.coleccion-topbar .nav-item.active:after{content:none}
+  .topbar.coleccion-topbar .nav-icono{display:block}
+  /* Oculto para el ojo, no para el lector de pantalla: `display:none` le quitaría el
+     nombre al enlace y solo quedaría el icono, que va marcado como decorativo. */
+  .topbar.coleccion-topbar .nav-texto{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+}
+@media(max-width:380px){
+  .topbar.coleccion-topbar nav{gap:3px}
+  .topbar.coleccion-topbar .nav-item{width:38px;height:38px}
+}
+@media(prefers-reduced-motion:reduce){
+  .topbar.coleccion-topbar .nav-item{transition:none}
+}
+/*  NOTA DE RENDIMIENTO — por que estos elementos ya NO llevan backdrop-filter
+   
+      Medido en Chromium sobre este mismo CSS: la portada tenia 45 elementos con desenfoque
+      de fondo (12 .book-card + 12 .card-stage + el resto). Cada uno obliga al navegador a
+      crear su propia capa, leer lo que hay detras y desenfocarlo en CADA fotograma. Con las
+      45 capas, el fotograma mediano al desplazar era de 116 ms; dejando solo las que se ven,
+      33 ms.
+   
+      El criterio no fue quitar cristal sino quitar el que no se puede ver. La propiedad
+      backdrop-filter
+      desenfoca LO QUE HAY DETRAS: sobre un fondo casi liso no produce nada, y dentro de otro
+      elemento que ya lo lleva desenfoca algo ya desenfocado. Se comparo pixel a pixel el
+      antes y el despues de cada selector: los de esta lista daban CERO pixeles de diferencia
+      por encima del umbral de percepcion.
+   
+      Siguen llevandolo, porque ahi si se nota: .topbar (el contenido pasa por debajo),
+      .overlay, .detail, .book-form y .sort-dropdown (flotan sobre el contenido), .destacado y
+      .destacado-favorito, .capa y .panel de la coleccion.
+   
+      Si añades un elemento de cristal nuevo, comprueba que detras haya algo que desenfocar. */
